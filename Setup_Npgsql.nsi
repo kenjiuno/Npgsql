@@ -140,6 +140,12 @@ Section ""
   SetOutPath "$INSTDIR\Mono.Security\4.0"
   File            "lib\Mono.Security\4.0\*.*"
 
+  SetOutPath "$INSTDIR\policies\net20\"
+  File     "Npgsql\bin\policies\net20\*.*"
+
+  SetOutPath "$INSTDIR\policies\net40"
+  File     "Npgsql\bin\policies\net40\*.*"
+
 SectionEnd
 
 ; un 2.0 3.5
@@ -230,7 +236,7 @@ SectionGroup "Install .NET3.5 ver to GAC"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst20 "$INSTDIR\bin\policies\net20\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst20 "$INSTDIR\policies\net20\policy.2.0.Npgsql.dll"
   SectionEnd
 SectionGroupEnd
 
@@ -255,7 +261,7 @@ SectionGroup "Install .NET4.0 ver to GAC"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst40 "$INSTDIR\bin\policies\net40\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst40 "$INSTDIR\policies\net40\policy.2.0.Npgsql.dll"
   SectionEnd
 SectionGroupEnd
 
