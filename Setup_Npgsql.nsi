@@ -31,7 +31,7 @@ Name "${APP} ${VER}"
 OutFile "Setup_${APP}-${VER}.exe"
 
 ; The default installation directory
-InstallDir "$APPDATA\${APP}"
+InstallDir "$PROGRAMFILES\${APP}\${VER}"
 
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
@@ -57,53 +57,98 @@ InstType "Install .NET4.0 ver to GAC"
 InstType "Install .NET4.5 ver to GAC"
 InstType "Uninstall"
 
+!macro _IfDotNetAvail _a _b _t _f
+  !insertmacro _LOGICLIB_TEMP
+  StrCpy $_LOGICLIB_TEMP "0"
+  StrCmp `${_b}` `` +3 0 ;if path is not blank, continue to next check
+  IfFileExists `$WINDIR\Microsoft.NET\Framework\${_b}\*.*` 0 +2 ;if directory exists, continue to confirm exists
+  StrCpy $_LOGICLIB_TEMP "1"
+  StrCmp $_LOGICLIB_TEMP "1" `${_t}` `${_f}`
+!macroend
+!define IfDotNetAvail `"" IfDotNetAvail`
+
 !macro GACRemove20 ASM
-  Push $0
-  ExecWait '"$INSTDIR\Tools20\GACRemove.exe" ${ASM}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
+  ${If} ${IfDotNetAvail} "v2.0.50727"
+    Push $0
+    ExecWait '"$INSTDIR\Tools20\GACRemove.exe" "${ASM}"' $0
+    DetailPrint "RetCode: $0"
+    Pop $0
+  ${EndIf}
 !macroend
 
 !macro GACRemove40 ASM
-  Push $0
-  ExecWait '"$INSTDIR\Tools40\GACRemove.exe" ${ASM}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
+  ${If} ${IfDotNetAvail} "v4.0.30319"
+    Push $0
+    ExecWait '"$INSTDIR\Tools40\GACRemove.exe" "${ASM}"' $0
+    DetailPrint "RetCode: $0"
+    Pop $0
+  ${EndIf}
 !macroend
 
 !macro GACInst20 PATH
-  Push $0
-  ExecWait '"$INSTDIR\Tools20\GACInstall.exe" ${PATH}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
+  ${If} ${IfDotNetAvail} "v2.0.50727"
+    Push $0
+    ExecWait '"$INSTDIR\Tools20\GACInstall.exe" "${PATH}"' $0
+    DetailPrint "RetCode: $0"
+    Pop $0
+  ${EndIf}
 !macroend
 
 !macro GACInst40 PATH
-  Push $0
-  ExecWait '"$INSTDIR\Tools40\GACInstall.exe" ${PATH}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
+  ${If} ${IfDotNetAvail} "v4.0.30319"
+    Push $0
+    ExecWait '"$INSTDIR\Tools40\GACInstall.exe" "${PATH}"' $0
+    DetailPrint "RetCode: $0"
+    Pop $0
+  ${EndIf}
 !macroend
 
-!macro RegAdoNet TOOLSVER MACHINECONFIG TYPE
-  Push $0
-  Push $1
+!macro RegAdoNet20 MACHINECONFIG TYPE
   ${If} ${FileExists} ${MACHINECONFIG}
-    StrCpy $0 '"$INSTDIR\Tools${TOOLSVER}\ModifyDbProviderFactories.exe"'
+  ${AndIf} ${IfDotNetAvail} "v2.0.50727"
+    Push $0
+    Push $1
+    
+    StrCpy $0 '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe"'
     StrCpy $0 '$0 "/add-or-replace"'
-    StrCpy $0 '$0 ${MACHINECONFIG}'
+    StrCpy $0 '$0 "${MACHINECONFIG}"'
     StrCpy $0 '$0 "Npgsql Data Provider"'
     StrCpy $0 '$0 "Npgsql"'
     StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 ${TYPE}'
+    StrCpy $0 '$0 "${TYPE}"'
     StrCpy $0 '$0 "support"'
     StrCpy $0 '$0 "FF"'
 
     ExecWait '$0' $1
     DetailPrint "RetCode: $1"
+    
+    Pop $1
+    Pop $0
   ${EndIf}
-  Pop $1
-  Pop $0
+!macroend
+
+!macro RegAdoNet40 MACHINECONFIG TYPE
+  ${If} ${FileExists} ${MACHINECONFIG}
+  ${AndIf} ${IfDotNetAvail} "v4.0.30319"
+    Push $0
+    Push $1
+    
+    StrCpy $0 '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe"'
+    StrCpy $0 '$0 "/add-or-replace"'
+    StrCpy $0 '$0 "${MACHINECONFIG}"'
+    StrCpy $0 '$0 "Npgsql Data Provider"'
+    StrCpy $0 '$0 "Npgsql"'
+    StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
+    StrCpy $0 '$0 "${TYPE}"'
+    StrCpy $0 '$0 "support"'
+    StrCpy $0 '$0 "FF"'
+
+    ExecWait '$0' $1
+    DetailPrint "RetCode: $1"
+    
+    Pop $1
+    Pop $0
+  ${EndIf}
 !macroend
 
 ; The stuff to install
@@ -123,6 +168,7 @@ Section ""
 
   SetOutPath                                             "$INSTDIR\Release-net35"
   File /r /x "*.pdb" /x "*.xml"                        "Npgsql\bin\Release-net35\Npgsql.*"
+  File /r /x "*.pdb" /x "*.xml" "Npgsql.EntityFramework\bin\Legacy-Release-net35\Npgsql.EntityFrameworkLegacy.*"
 
   SetOutPath                                             "$INSTDIR\Release-net40"
   File /r /x "*.pdb" /x "*.xml"                        "Npgsql\bin\Release-net40\Npgsql.*"
@@ -213,8 +259,8 @@ SectionGroup "Install .NET2.0 ver to GAC"
   Section "Register to machine.config"
     SectionIn 1
     SetOutPath "$INSTDIR"
-    !insertmacro RegAdoNet 20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
-    !insertmacro RegAdoNet 20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
+    !insertmacro RegAdoNet20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
+    !insertmacro RegAdoNet20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
@@ -227,12 +273,13 @@ SectionGroup "Install .NET3.5 ver to GAC"
     SectionIn 2
     SetOutPath "$INSTDIR"
     !insertmacro GACInst20 "$INSTDIR\Release-net35\Npgsql.dll"
+    !insertmacro GACInst20 "$INSTDIR\Release-net35\Npgsql.EntityFrameworkLegacy.dll"
   SectionEnd
   Section "Register to machine.config"
     SectionIn 2
     SetOutPath "$INSTDIR"
-    !insertmacro RegAdoNet 20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
-    !insertmacro RegAdoNet 20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
+    !insertmacro RegAdoNet20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
+    !insertmacro RegAdoNet20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
@@ -256,8 +303,8 @@ SectionGroup "Install .NET4.0 ver to GAC"
   Section "Register to machine.config"
     SectionIn 3
     SetOutPath "$INSTDIR"
-    !insertmacro RegAdoNet 40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
-    !insertmacro RegAdoNet 40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
+    !insertmacro RegAdoNet40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
+    !insertmacro RegAdoNet40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
@@ -277,8 +324,8 @@ SectionGroup "Install .NET4.5 ver to GAC"
   Section "Register to machine.config"
     SectionIn 4
     SetOutPath "$INSTDIR"
-    !insertmacro RegAdoNet 40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
-    !insertmacro RegAdoNet 40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
+    !insertmacro RegAdoNet40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
+    !insertmacro RegAdoNet40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
