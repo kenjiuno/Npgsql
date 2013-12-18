@@ -57,6 +57,55 @@ InstType "Install .NET4.0 ver to GAC"
 InstType "Install .NET4.5 ver to GAC"
 InstType "Uninstall"
 
+!macro GACRemove20 ASM
+  Push $0
+  ExecWait '"$INSTDIR\Tools20\GACRemove.exe" ${ASM}' $0
+  DetailPrint "RetCode: $0"
+  Pop $0
+!macroend
+
+!macro GACRemove40 ASM
+  Push $0
+  ExecWait '"$INSTDIR\Tools40\GACRemove.exe" ${ASM}' $0
+  DetailPrint "RetCode: $0"
+  Pop $0
+!macroend
+
+!macro GACInst20 PATH
+  Push $0
+  ExecWait '"$INSTDIR\Tools20\GACInstall.exe" ${PATH}' $0
+  DetailPrint "RetCode: $0"
+  Pop $0
+!macroend
+
+!macro GACInst40 PATH
+  Push $0
+  ExecWait '"$INSTDIR\Tools40\GACInstall.exe" ${PATH}' $0
+  DetailPrint "RetCode: $0"
+  Pop $0
+!macroend
+
+!macro RegAdoNet TOOLSVER MACHINECONFIG TYPE
+  Push $0
+  Push $1
+  ${If} ${FileExists} ${MACHINECONFIG}
+    StrCpy $0 '"$INSTDIR\Tools${TOOLSVER}\ModifyDbProviderFactories.exe"'
+    StrCpy $0 '$0 "/add-or-replace"'
+    StrCpy $0 '$0 ${MACHINECONFIG}'
+    StrCpy $0 '$0 "Npgsql Data Provider"'
+    StrCpy $0 '$0 "Npgsql"'
+    StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
+    StrCpy $0 '$0 ${TYPE}'
+    StrCpy $0 '$0 "support"'
+    StrCpy $0 '$0 "FF"'
+
+    ExecWait '$0' $1
+    DetailPrint "RetCode: $1"
+  ${EndIf}
+  Pop $1
+  Pop $0
+!macroend
+
 ; The stuff to install
 Section ""
   SetOutPath "$INSTDIR\Tools20"
@@ -93,278 +142,140 @@ Section ""
 
 SectionEnd
 
-!macro GACRemove20 ASM
-  Push $0
-  ExecWait '"$INSTDIR\Tools20\GACRemove.exe" ${ASM}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
-!macroend
-
-!macro GACRemove40 ASM
-  Push $0
-  ExecWait '"$INSTDIR\Tools40\GACRemove.exe" ${ASM}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
-!macroend
-
-!macro GACInst20 PATH
-  Push $0
-  ExecWait '"$INSTDIR\Tools20\GACInstall.exe" ${PATH}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
-!macroend
-
-!macro GACInst40 PATH
-  Push $0
-  ExecWait '"$INSTDIR\Tools40\GACInstall.exe" ${PATH}' $0
-  DetailPrint "RetCode: $0"
-  Pop $0
-!macroend
-
 ; un 2.0 3.5
 ; un 2.0 3.5
 ; un 2.0 3.5
 
-Section "Uninst Npgsql.dll (.NET2.0/3.5) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove20 "${ASM20_35}"
-SectionEnd
-
-Section "Uninst Npgsql.EntityFrameworkLegacy (.NET3.5) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove20 "${ASM35ef}"
-SectionEnd
-
-Section "Uninst Mono.Security.dll(2.0) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove20 "${ASM20ms}"
-SectionEnd
-
-Section "Uninst Npgsql DbProviderFactory from .NET2.0 machine.config"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config"
-    ExecWait '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "Npgsql"' $0
-    DetailPrint "RetCode: $0"
-  ${EndIf}
-
-  ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config"
-    ExecWait '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "Npgsql"' $0
-    DetailPrint "RetCode: $0"
-  ${EndIf}
-SectionEnd
-
-; un 4.0 4.5
-; un 4.0 4.5
-; un 4.0 4.5
-
-Section "Uninst Npgsql.dll (.NET4.0/4.5) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove40 "${ASM40_45}"
-SectionEnd
-
-Section "Uninst Npgsql.EntityFrameworkLegacy.dll (.NET4.0/4.5) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove40 "${ASM40_45ef}"
-SectionEnd
-
-Section "Uninst Npgsql.EntityFramework.dll (.NET4.0/4.5) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove40 "${ASM40_45ef6}"
-SectionEnd
-
-Section "Uninst Mono.Security.dll(4.0) from GAC"
-  SectionIn 5
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACRemove40 "${ASM40ms}"
-SectionEnd
-
-Section "Uninst Npgsql DbProviderFactory from .NET4.0 machine.config"
-  SectionIn 5
-  
-  SetOutPath "$INSTDIR"
-
-  ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
-    ExecWait '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "Npgsql"' $0
-    DetailPrint "RetCode: $0"
-  ${EndIf}
-
-  ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config"
-    ExecWait '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "Npgsql"' $0
-    DetailPrint "RetCode: $0"
-  ${EndIf}
-SectionEnd
-
-; inst 2.0 3.5
-; inst 2.0 3.5
-; inst 2.0 3.5
-
-Section "Inst Npgsql.dll (.NET2.0) to GAC"
-  SectionIn 1
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst20 "$INSTDIR\Release-net20\Npgsql.dll"
-SectionEnd
-
-Section "Inst Npgsql.dll (.NET3.5) to GAC"
-  SectionIn 2
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst20 "$INSTDIR\Release-net35\Npgsql.dll"
-SectionEnd
-
-Section "Inst Npgsql DbProviderFactory to .NET2.0 machine.config"
-  SectionIn 1 2
-
-  SetOutPath "$INSTDIR"
-
-  ${If} ${FileExists} "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config"
-    StrCpy $0 '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe"'
-    StrCpy $0 '$0 "/add-or-replace"'
-    StrCpy $0 '$0 "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config"'
-    StrCpy $0 '$0 "Npgsql Data Provider"'
-    StrCpy $0 '$0 "Npgsql"'
-    StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 "${FAC20_35}"'
-    StrCpy $0 '$0 "support"'
-    StrCpy $0 '$0 "FF"'
-
-    ExecWait '$0' $1
-    DetailPrint "RetCode: $1"
-  ${EndIf}
-
-  ${If} ${FileExists} "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config"
-    StrCpy $0 '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe"'
-    StrCpy $0 '$0 "/add-or-replace"'
-    StrCpy $0 '$0 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config"'
-    StrCpy $0 '$0 "Npgsql Data Provider"'
-    StrCpy $0 '$0 "Npgsql"'
-    StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 "${FAC20_35}"'
-    StrCpy $0 '$0 "support"'
-    StrCpy $0 '$0 "FF"'
-
-    ExecWait '$0' $1
-    DetailPrint "RetCode: $1"
-  ${EndIF}
-SectionEnd
-
-; inst 4.0 4.5
-; inst 4.0 4.5
-; inst 4.0 4.5
-
-Section "Inst Npgsql.dll (.NET4.0) to GAC"
-  SectionIn 3
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Release-net40\Npgsql.dll"
-SectionEnd
-
-Section "Inst Npgsql.EntityFramework.dll (.NET4.0) to GAC"
-  SectionIn 3
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Release-net40\Npgsql.EntityFramework.dll"
-SectionEnd
-
-Section "Inst Npgsql.EntityFrameworkLegacy.dll (.NET4.0) to GAC"
-  SectionIn 3
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Release-net40\Npgsql.EntityFrameworkLegacy.dll"
-SectionEnd
-
-Section "Inst Npgsql.dll (.NET4.5) to GAC"
-  SectionIn 4
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Release-net45\Npgsql.dll"
-SectionEnd
-
-Section "Inst Npgsql.EntityFramework.dll (.NET4.5) to GAC"
-  SectionIn 4
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Release-net45\Npgsql.EntityFramework.dll"
-SectionEnd
-
-Section "Inst Npgsql.EntityFrameworkLegacy.dll (.NET4.5) to GAC"
-  SectionIn 4
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Release-net45\Npgsql.EntityFrameworkLegacy.dll"
-SectionEnd
-
-Section "Inst Mono.Security.dll(4.0) to GAC"
-  SectionIn 3 4
-
-  SetOutPath "$INSTDIR"
-
-  !insertmacro GACInst40 "$INSTDIR\Mono.Security\4.0\Mono.Security.dll"
-SectionEnd
-
-Section "Inst Npgsql DbProviderFactory to .NET4.0 machine.config"
-  SectionIn 3 4
-
-  SetOutPath "$INSTDIR"
-
-  ${If} ${FileExists} "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
-    StrCpy $0 '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe"'
-    StrCpy $0 '$0 "/add-or-replace"'
-    StrCpy $0 '$0 "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"'
-    StrCpy $0 '$0 "Npgsql Data Provider"'
-    StrCpy $0 '$0 "Npgsql"'
-    StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 "${FAC40_45}"'
-    StrCpy $0 '$0 "support"'
-    StrCpy $0 '$0 "FF"'
-
-    ExecWait '$0' $1
-    DetailPrint "RetCode: $1"
-  ${EndIf}
-
-  ${If} ${FileExists} "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config"
-    StrCpy $0 '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe"'
-    StrCpy $0 '$0 "/add-or-replace"'
-    StrCpy $0 '$0 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config"'
-    StrCpy $0 '$0 "Npgsql Data Provider"'
-    StrCpy $0 '$0 "Npgsql"'
-    StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 "${FAC40_45}"'
-    StrCpy $0 '$0 "support"'
-    StrCpy $0 '$0 "FF"'
-
-    ExecWait '$0' $1
-    DetailPrint "RetCode: $1"
-  ${EndIF}
-SectionEnd
+SectionGroup "Uninstall from .NET2.0/3.5"
+  Section
+    SectionIn 5
+    SetOutPath "$INSTDIR"
+    !insertmacro GACRemove20 "${ASM20_35}"
+    !insertmacro GACRemove20 "${ASM35ef}"
+    !insertmacro GACRemove20 "${ASM20ms}"
+  SectionEnd
+  Section "Unregister from machine.config"
+    SectionIn 5
+    SetOutPath "$INSTDIR"
+
+    ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config"
+      ExecWait '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "Npgsql"' $0
+      DetailPrint "RetCode: $0"
+    ${EndIf}
+
+    ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config"
+      ExecWait '"$INSTDIR\Tools20\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "Npgsql"' $0
+      DetailPrint "RetCode: $0"
+    ${EndIf}
+  SectionEnd
+SectionGroupEnd
+
+SectionGroup "Uninstall from .NET4.0/4.5"
+  Section
+    SectionIn 5
+    !insertmacro GACRemove40 "${ASM40_45}"
+    !insertmacro GACRemove40 "${ASM40_45ef}"
+    !insertmacro GACRemove40 "${ASM40_45ef6}"
+    !insertmacro GACRemove40 "${ASM40ms}"
+  SectionEnd
+  Section "Unregister from machine.config"
+    SectionIn 5
+    SetOutPath "$INSTDIR"
+    
+    ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
+      ExecWait '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "Npgsql"' $0
+      DetailPrint "RetCode: $0"
+    ${EndIf}
+
+    ${If} ${FileExists}                                                    "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config"
+      ExecWait '"$INSTDIR\Tools40\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "Npgsql"' $0
+      DetailPrint "RetCode: $0"
+    ${EndIf}
+  SectionEnd
+SectionGroupEnd
+
+; inst 20 35
+; inst 20 35
+; inst 20 35
+
+SectionGroup "Install .NET2.0 ver to GAC"
+  Section
+    SectionIn 1
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst20 "$INSTDIR\Release-net20\Npgsql.dll"
+  SectionEnd
+  Section "Register to machine.config"
+    SectionIn 1
+    SetOutPath "$INSTDIR"
+    !insertmacro RegAdoNet 20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
+    !insertmacro RegAdoNet 20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
+  SectionEnd
+  Section "Install publisher policy"
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst20 "$INSTDIR\bin\policies\net20\policy.2.0.Npgsql.dll"
+  SectionEnd
+SectionGroupEnd
+
+SectionGroup "Install .NET3.5 ver to GAC"
+  Section
+    SectionIn 2
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst20 "$INSTDIR\Release-net35\Npgsql.dll"
+  SectionEnd
+  Section "Register to machine.config"
+    SectionIn 2
+    SetOutPath "$INSTDIR"
+    !insertmacro RegAdoNet 20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
+    !insertmacro RegAdoNet 20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
+  SectionEnd
+  Section "Install publisher policy"
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst20 "$INSTDIR\bin\policies\net20\policy.2.0.Npgsql.dll"
+  SectionEnd
+SectionGroupEnd
+
+; inst 40 45
+; inst 40 45
+; inst 40 45
+
+SectionGroup "Install .NET4.0 ver to GAC"
+  Section
+    SectionIn 3
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst40 "$INSTDIR\Release-net40\Npgsql.dll"
+    !insertmacro GACInst40 "$INSTDIR\Release-net40\Npgsql.EntityFramework.dll"
+    !insertmacro GACInst40 "$INSTDIR\Release-net40\Npgsql.EntityFrameworkLegacy.dll"
+    !insertmacro GACInst40 "$INSTDIR\Mono.Security\4.0\Mono.Security.dll"
+  SectionEnd
+  Section "Register to machine.config"
+    SectionIn 3
+    SetOutPath "$INSTDIR"
+    !insertmacro RegAdoNet 40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
+    !insertmacro RegAdoNet 40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
+  SectionEnd
+  Section "Install publisher policy"
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst40 "$INSTDIR\bin\policies\net40\policy.2.0.Npgsql.dll"
+  SectionEnd
+SectionGroupEnd
+
+SectionGroup "Install .NET4.5 ver to GAC"
+  Section
+    SectionIn 4
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst40 "$INSTDIR\Release-net45\Npgsql.dll"
+    !insertmacro GACInst40 "$INSTDIR\Release-net45\Npgsql.EntityFramework.dll"
+    !insertmacro GACInst40 "$INSTDIR\Release-net45\Npgsql.EntityFrameworkLegacy.dll"
+    !insertmacro GACInst40 "$INSTDIR\Mono.Security\4.0\Mono.Security.dll"
+  SectionEnd
+  Section "Register to machine.config"
+    SectionIn 4
+    SetOutPath "$INSTDIR"
+    !insertmacro RegAdoNet 40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
+    !insertmacro RegAdoNet 40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
+  SectionEnd
+  Section "Install publisher policy"
+    SetOutPath "$INSTDIR"
+    !insertmacro GACInst40 "$INSTDIR\bin\policies\net40\policy.2.0.Npgsql.dll"
+  SectionEnd
+SectionGroupEnd
