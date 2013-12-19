@@ -8,21 +8,25 @@
 ;--------------------------------
 
 !define APP "Npgsql"
-!define VER "2.1.0"
+!define VER "2.1.0.0"
 
-!define ASM20_35 "Npgsql, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
-!define ASM40_45 "Npgsql, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
+!define ASM20_35 "Npgsql, Version=${VER}, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
+!define ASM40_45 "Npgsql, Version=${VER}, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
 
-!define ASM35ef "Npgsql.EntityFrameworkLegacy, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
-!define ASM40_45ef "Npgsql.EntityFrameworkLegacy, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
+!define ASM35ef "Npgsql.EntityFrameworkLegacy, Version=${VER}, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
+!define ASM40_45ef "Npgsql.EntityFrameworkLegacy, Version=${VER}, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
 
-!define ASM40_45ef6 "Npgsql.EntityFramework, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
+!define ASM40_45ef6 "Npgsql.EntityFramework, Version=${VER}, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
 
 !define ASM20ms "Mono.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"
 !define ASM40ms "Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"
 
 !define FAC20_35 "Npgsql.NpgsqlFactory, ${ASM20_35}"
 !define FAC40_45 "Npgsql.NpgsqlFactory, ${ASM40_45}"
+
+!define TTL_INST_PUBPOL "Install publisher policy: fix up Npgsql 2.1.x.x"
+
+!define DLL_PUBPOL "policy.2.0.Npgsql.dll"
 
 ; The name of the installer
 Name "${APP} ${VER}"
@@ -31,7 +35,7 @@ Name "${APP} ${VER}"
 OutFile "Setup_${APP}-${VER}.exe"
 
 ; The default installation directory
-InstallDir "$PROGRAMFILES\${APP}\${VER}"
+InstallDir "$APPDATA\${APP}\${VER}"
 
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
@@ -43,7 +47,6 @@ RequestExecutionLevel admin
 ; Pages
 
 Page license
-Page directory
 Page components
 Page instfiles
 
@@ -57,7 +60,7 @@ InstType "Install .NET4.0 ver to GAC"
 InstType "Install .NET4.5 ver to GAC"
 InstType "Uninstall"
 
-!macro _IfDotNetAvail _a _b _t _f
+!macro _DotNetAvail _a _b _t _f
   !insertmacro _LOGICLIB_TEMP
   StrCpy $_LOGICLIB_TEMP "0"
   StrCmp `${_b}` `` +3 0 ;if path is not blank, continue to next check
@@ -65,10 +68,10 @@ InstType "Uninstall"
   StrCpy $_LOGICLIB_TEMP "1"
   StrCmp $_LOGICLIB_TEMP "1" `${_t}` `${_f}`
 !macroend
-!define IfDotNetAvail `"" IfDotNetAvail`
+!define DotNetAvail `"" DotNetAvail`
 
 !macro GACRemove20 ASM
-  ${If} ${IfDotNetAvail} "v2.0.50727"
+  ${If} ${DotNetAvail} "v2.0.50727"
     Push $0
     ExecWait '"$INSTDIR\Tools20\GACRemove.exe" "${ASM}"' $0
     DetailPrint "RetCode: $0"
@@ -77,7 +80,7 @@ InstType "Uninstall"
 !macroend
 
 !macro GACRemove40 ASM
-  ${If} ${IfDotNetAvail} "v4.0.30319"
+  ${If} ${DotNetAvail} "v4.0.30319"
     Push $0
     ExecWait '"$INSTDIR\Tools40\GACRemove.exe" "${ASM}"' $0
     DetailPrint "RetCode: $0"
@@ -86,7 +89,7 @@ InstType "Uninstall"
 !macroend
 
 !macro GACInst20 PATH
-  ${If} ${IfDotNetAvail} "v2.0.50727"
+  ${If} ${DotNetAvail} "v2.0.50727"
     Push $0
     ExecWait '"$INSTDIR\Tools20\GACInstall.exe" "${PATH}"' $0
     DetailPrint "RetCode: $0"
@@ -95,7 +98,7 @@ InstType "Uninstall"
 !macroend
 
 !macro GACInst40 PATH
-  ${If} ${IfDotNetAvail} "v4.0.30319"
+  ${If} ${DotNetAvail} "v4.0.30319"
     Push $0
     ExecWait '"$INSTDIR\Tools40\GACInstall.exe" "${PATH}"' $0
     DetailPrint "RetCode: $0"
@@ -105,7 +108,7 @@ InstType "Uninstall"
 
 !macro RegAdoNet20 MACHINECONFIG TYPE
   ${If} ${FileExists} ${MACHINECONFIG}
-  ${AndIf} ${IfDotNetAvail} "v2.0.50727"
+  ${AndIf} ${DotNetAvail} "v2.0.50727"
     Push $0
     Push $1
     
@@ -129,7 +132,7 @@ InstType "Uninstall"
 
 !macro RegAdoNet40 MACHINECONFIG TYPE
   ${If} ${FileExists} ${MACHINECONFIG}
-  ${AndIf} ${IfDotNetAvail} "v4.0.30319"
+  ${AndIf} ${DotNetAvail} "v4.0.30319"
     Push $0
     Push $1
     
@@ -262,9 +265,9 @@ SectionGroup "Install .NET2.0 ver to GAC"
     !insertmacro RegAdoNet20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
     !insertmacro RegAdoNet20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
   SectionEnd
-  Section "Install publisher policy"
+  Section "${TTL_INST_PUBPOL}"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst20 "$INSTDIR\bin\policies\net20\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst20 "$INSTDIR\policies\net20\${DLL_PUBPOL}"
   SectionEnd
 SectionGroupEnd
 
@@ -281,9 +284,9 @@ SectionGroup "Install .NET3.5 ver to GAC"
     !insertmacro RegAdoNet20   "$WINDIR\Microsoft.NET\Framework\v2.0.50727\Config\machine.config" "${FAC20_35}"
     !insertmacro RegAdoNet20 "$WINDIR\Microsoft.NET\Framework64\v2.0.50727\Config\machine.config" "${FAC20_35}"
   SectionEnd
-  Section "Install publisher policy"
+  Section "${TTL_INST_PUBPOL}"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst20 "$INSTDIR\policies\net20\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst20 "$INSTDIR\policies\net20\${DLL_PUBPOL}"
   SectionEnd
 SectionGroupEnd
 
@@ -306,9 +309,9 @@ SectionGroup "Install .NET4.0 ver to GAC"
     !insertmacro RegAdoNet40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
     !insertmacro RegAdoNet40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
   SectionEnd
-  Section "Install publisher policy"
+  Section "${TTL_INST_PUBPOL}"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst40 "$INSTDIR\policies\net40\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst40 "$INSTDIR\policies\net40\${DLL_PUBPOL}"
   SectionEnd
 SectionGroupEnd
 
@@ -327,8 +330,14 @@ SectionGroup "Install .NET4.5 ver to GAC"
     !insertmacro RegAdoNet40   "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "${FAC40_45}"
     !insertmacro RegAdoNet40 "$WINDIR\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config" "${FAC40_45}"
   SectionEnd
-  Section "Install publisher policy"
+  Section "${TTL_INST_PUBPOL}"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst40 "$INSTDIR\policies\net40\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst40 "$INSTDIR\policies\net40\${DLL_PUBPOL}"
   SectionEnd
 SectionGroupEnd
+
+Section
+  DetailPrint "Visit NuGet site for public release: https://www.nuget.org/packages/Npgsql"
+  RMDir /r "$INSTDIR"
+  DetailPrint "Visit NuGet site for public release: https://www.nuget.org/packages/Npgsql"
+SectionEnd
