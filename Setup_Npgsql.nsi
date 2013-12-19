@@ -329,6 +329,6 @@ SectionGroup "Install .NET4.5 ver to GAC"
   SectionEnd
   Section "Install publisher policy"
     SetOutPath "$INSTDIR"
-    !insertmacro GACInst40 "$INSTDIR\bin\policies\net40\policy.2.0.Npgsql.dll"
+    !insertmacro GACInst40 "$INSTDIR\policies\net40\policy.2.0.Npgsql.dll"
   SectionEnd
 SectionGroupEnd
