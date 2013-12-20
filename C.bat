@@ -1,0 +1,1 @@
+candle NpgsqlSetup.wxs && light -ext WixUIExtension NpgsqlSetup.wixobj
