@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="772a9e26-9ab8-4011-bce6-d95b19d22b57"
+           Name="NpgsqlSetup"
+           Language="1033"
+           Version="2.1.0.0"
+           Manufacturer="You"
+           UpgradeCode="df971e89-5e78-4142-9ed2-179c0255a800">
+    <Package InstallerVersion="200"
+             Compressed="yes"
+             InstallScope="perMachine"
+             ShortNames="no" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate />
+
+    <Feature Id="Npgsql20" Title="Install .NET2.0 ver to GAC" Level="2" Description="Vs2005/Vs2008/Vs2010/Vs2012/Vs2013">
+      <ComponentRef Id="Npgsql20" />
+      <ComponentRef Id="Mono.Security20" />
+    </Feature>
+
+    <Feature Id="Npgsql35" Title="Install .NET3.5 ver to GAC" Level="2" Description="Vs2008/Vs2010/Vs2012/Vs2013">
+      <ComponentRef Id="Npgsql35" />
+      <ComponentRef Id="Mono.Security20" />
+      <ComponentRef Id="Npgsql.EntityFrameworkLegacy35" />
+    </Feature>
+
+    <Feature Id="Npgsql40" Title="Install .NET4.0 ver to GAC" Level="2" Description="Vs2010/Vs2012/Vs2013">
+      <ComponentRef Id="Npgsql40" />
+      <ComponentRef Id="Mono.Security40" />
+      <ComponentRef Id="Npgsql.EntityFrameworkLegacy40" />
+      <ComponentRef Id="Npgsql.EntityFramework40" />
+      <ComponentRef Id="EntityFramework6_net40" />
+    </Feature>
+
+    <Feature Id="Npgsql45" Title="Install .NET4.5 ver to GAC" Level="2" Description="Vs2012/Vs2013">
+      <ComponentRef Id="Npgsql45" />
+      <ComponentRef Id="Mono.Security40" />
+      <ComponentRef Id="Npgsql.EntityFrameworkLegacy45" />
+      <ComponentRef Id="Npgsql.EntityFramework45" />
+      <ComponentRef Id="EntityFramework6_net45" />
+    </Feature>
+
+    <UIRef Id="WixUI_FeatureTree" />
+
+    <WixVariable Id="WixUILicenseRtf" Value="README.rtf" />
+
+    <!-- http://blogs.msdn.com/b/heaths/archive/2006/09/20/installing-assemblies-for-runtime-and-design_2d00_time-use.aspx -->
+    <!-- http://stackoverflow.com/questions/17090689/wix-deploy-two-assemblies-to-gac -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="Dir1" Name="Dir1">
+        <Directory Id="Npgsql20" Name="GAC">
+          <Component Id="Npgsql20" Guid="8ccf75c9-f622-44f2-ad75-2365042dd366">
+            <File Id="Npgsql20"
+                  Name="Npgsql.dll"
+                  Source=".\Npgsql\bin\Release-net20\Npgsql.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir2" Name="Dir2">
+        <Directory Id="Npgsql35" Name="GAC">
+          <Component Id="Npgsql35" Guid="9ab5982b-5680-4e2a-839b-8914120e2949">
+            <File Id="Npgsql35"
+                  Name="Npgsql.dll"
+                  Source=".\Npgsql\bin\Release-net35\Npgsql.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="Dir3" Name="Dir3">
+        <Directory Id="Npgsql40" Name="GAC">
+          <Component Id="Npgsql40" Guid="93e5b40a-2798-4238-ada4-380d49dff8b2">
+            <File Id="Npgsql40"
+                  Name="Npgsql.dll"
+                  Source=".\Npgsql\bin\Release-net40\Npgsql.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir4" Name="Dir4">
+        <Directory Id="Npgsql45" Name="GAC">
+          <Component Id="Npgsql45" Guid="f842fa5e-5623-41aa-80aa-6d2e5bf97435">
+            <File Id="Npgsql45"
+                  Name="Npgsql.dll"
+                  Source=".\Npgsql\bin\Release-net45\Npgsql.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="Dir5" Name="Dir5">
+        <Directory Id="Npgsql.EntityFrameworkLegacy35" Name="GAC">
+          <Component Id="Npgsql.EntityFrameworkLegacy35" Guid="df5d1399-28a6-43de-9c98-1d3e17d3a45b">
+            <File Id="Npgsql.EntityFrameworkLegacy35"
+                  Name="Npgsql.EntityFrameworkLegacy.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Legacy-Release-net35\Npgsql.EntityFrameworkLegacy.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir6" Name="Dir6">
+        <Directory Id="Npgsql.EntityFrameworkLegacy40" Name="GAC">
+          <Component Id="Npgsql.EntityFrameworkLegacy40" Guid="95ed4f0f-67f4-4a7c-b81b-e1ee477aa9eb">
+            <File Id="Npgsql.EntityFrameworkLegacy40"
+                  Name="Npgsql.EntityFrameworkLegacy.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Legacy-Release-net40\Npgsql.EntityFrameworkLegacy.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir7" Name="Dir7">
+        <Directory Id="Npgsql.EntityFrameworkLegacy45" Name="GAC">
+          <Component Id="Npgsql.EntityFrameworkLegacy45" Guid="4e287492-e2e8-4b6a-b5d6-f8f579be224c">
+            <File Id="Npgsql.EntityFrameworkLegacy45"
+                  Name="Npgsql.EntityFrameworkLegacy.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Legacy-Release-net45\Npgsql.EntityFrameworkLegacy.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="Dir8" Name="Dir8">
+        <Directory Id="Npgsql.EntityFramework40" Name="GAC">
+          <Component Id="Npgsql.EntityFramework40" Guid="f928cb58-e6e5-45fd-aa43-1b758cbc397d">
+            <File Id="Npgsql.EntityFramework40"
+                  Name="Npgsql.EntityFramework.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Release-net40\Npgsql.EntityFramework.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir9" Name="Dir9">
+        <Directory Id="Npgsql.EntityFramework45" Name="GAC">
+          <Component Id="Npgsql.EntityFramework45" Guid="79ff6d80-b56d-4775-be4a-15912fd46156">
+            <File Id="Npgsql.EntityFramework45"
+                  Name="Npgsql.EntityFramework.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Release-net45\Npgsql.EntityFramework.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="Dir10" Name="Dir10">
+        <Directory Id="EntityFramework6_net40" Name="GAC">
+          <Component Id="EntityFramework6_net40" Guid="8d502018-f89a-4c7c-bf22-0f7a2f94f804">
+            <File Id="EntityFramework6_net40"
+                  Name="EntityFramework.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Release-net40\EntityFramework.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir11" Name="Dir11">
+        <Directory Id="EntityFramework6_net45EntityFramework45" Name="GAC">
+          <Component Id="EntityFramework6_net45" Guid="e4f298c5-cb99-412e-b7fc-99147370fad0">
+            <File Id="EntityFramework6_net45"
+                  Name="EntityFramework.dll"
+                  Source=".\Npgsql.EntityFramework\bin\Release-net45\EntityFramework.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="Dir12" Name="Dir12">
+        <Directory Id="Mono.Security20" Name="GAC">
+          <Component Id="Mono.Security20" Guid="f0296733-d063-4bef-900f-70af3f904625">
+            <File Id="Mono.Security20"
+                  Name="Mono.Security.dll"
+                  Source=".\lib\Mono.Security\2.0\Mono.Security.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir13" Name="Dir13">
+        <Directory Id="Mono.Security40" Name="GAC">
+          <Component Id="Mono.Security40" Guid="15efb59f-77a2-4aee-9ce8-6cfd2c3091b9">
+            <File Id="Mono.Security40"
+                  Name="Mono.Security.dll"
+                  Source=".\lib\Mono.Security\4.0\Mono.Security.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+  </Product>
+</Wix>
