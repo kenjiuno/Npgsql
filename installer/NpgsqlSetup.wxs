@@ -3,6 +3,17 @@
   <!--
   Usage:
     candle -dVER=2.0.14.3 -dEF=0 NpgsqlSetup.wxs && light -ext WixUIExtension NpgsqlSetup.wixobj
+    
+  Location: Npgsql\installer
+  
+  Folder structure:
+    Npgsql2.0.14.3-bin-ms.net2.0
+    Npgsql2.0.14.3-bin-ms.net3.5sp1
+    Npgsql2.0.14.3-bin-ms.net4.0
+    Npgsql2.0.14.3-bin-ms.net4.5
+    NpgsqlSetup.wxs
+    README.rtf
+    
     -->
   <Product Id="772a9e26-9ab8-4011-bce6-d95b19d22b57"
            Name="Npgsql $(var.VER) GAC"
