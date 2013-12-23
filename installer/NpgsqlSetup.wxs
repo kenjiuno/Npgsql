@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <!--
+  Usage:
+    candle -dVER=2.0.14.3 -dEF=0 NpgsqlSetup.wxs && light -ext WixUIExtension NpgsqlSetup.wixobj
+    -->
   <Product Id="772a9e26-9ab8-4011-bce6-d95b19d22b57"
-           Name="Npgsql $(var.ver) GAC"
+           Name="Npgsql $(var.VER) GAC"
            Language="1033"
-           Version="$(var.ver)"
+           Version="$(var.VER)"
            Manufacturer="You"
            UpgradeCode="df971e89-5e78-4142-9ed2-179c0255a800">
     <Package InstallerVersion="200"
@@ -82,7 +86,7 @@
           <Component Id="Npgsql20" Guid="8ccf75c9-f622-44f2-ad75-2365042dd366">
             <File Id="Npgsql20"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql$(var.ver)-bin-ms.net2.0\Npgsql.dll"
+                  Source=".\Npgsql$(var.VER)-bin-ms.net2.0\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -93,7 +97,7 @@
           <Component Id="Npgsql35" Guid="9ab5982b-5680-4e2a-839b-8914120e2949">
             <File Id="Npgsql35"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql$(var.ver)-bin-ms.net3.5sp1\Npgsql.dll"
+                  Source=".\Npgsql$(var.VER)-bin-ms.net3.5sp1\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -105,7 +109,7 @@
           <Component Id="Npgsql40" Guid="93e5b40a-2798-4238-ada4-380d49dff8b2">
             <File Id="Npgsql40"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql$(var.ver)-bin-ms.net4.0\Npgsql.dll"
+                  Source=".\Npgsql$(var.VER)-bin-ms.net4.0\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -116,7 +120,7 @@
           <Component Id="Npgsql45" Guid="f842fa5e-5623-41aa-80aa-6d2e5bf97435">
             <File Id="Npgsql45"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql$(var.ver)-bin-ms.net4.5\Npgsql.dll"
+                  Source=".\Npgsql$(var.VER)-bin-ms.net4.5\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
