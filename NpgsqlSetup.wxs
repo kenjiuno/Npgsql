@@ -13,7 +13,7 @@
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
-    <MediaTemplate />
+    <MediaTemplate EmbedCab="yes" />
 
     <Feature Id="Npgsql20" Title="Install .NET2.0 ver to GAC" Level="2" Description="Vs2005/Vs2008/Vs2010/Vs2012/Vs2013">
       <ComponentRef Id="Npgsql20" />
@@ -23,23 +23,33 @@
     <Feature Id="Npgsql35" Title="Install .NET3.5 ver to GAC" Level="2" Description="Vs2008/Vs2010/Vs2012/Vs2013">
       <ComponentRef Id="Npgsql35" />
       <ComponentRef Id="Mono.Security20" />
-      <ComponentRef Id="Npgsql.EntityFrameworkLegacy35" />
+      <Feature Id="Npgsql35EntityFrameworkLegacy" Title="EntityFrameworkLegacy" Level="2">
+        <ComponentRef Id="Npgsql.EntityFrameworkLegacy35" />
+      </Feature>
     </Feature>
 
     <Feature Id="Npgsql40" Title="Install .NET4.0 ver to GAC" Level="2" Description="Vs2010/Vs2012/Vs2013">
       <ComponentRef Id="Npgsql40" />
       <ComponentRef Id="Mono.Security40" />
-      <ComponentRef Id="Npgsql.EntityFrameworkLegacy40" />
-      <ComponentRef Id="Npgsql.EntityFramework40" />
-      <ComponentRef Id="EntityFramework6_net40" />
+      <Feature Id="Npgsql40EntityFrameworkLegacy" Title="EntityFrameworkLegacy" Level="2" Description="EntityFrameworkLegacy40">
+        <ComponentRef Id="Npgsql.EntityFrameworkLegacy40" />
+      </Feature>
+      <Feature Id="Npgsql40EntityFramework" Title="EntityFramework" Level="2" Description="EntityFramework40">
+        <ComponentRef Id="Npgsql.EntityFramework40" />
+        <ComponentRef Id="EntityFramework6_net40" />
+      </Feature>
     </Feature>
 
     <Feature Id="Npgsql45" Title="Install .NET4.5 ver to GAC" Level="2" Description="Vs2012/Vs2013">
       <ComponentRef Id="Npgsql45" />
       <ComponentRef Id="Mono.Security40" />
-      <ComponentRef Id="Npgsql.EntityFrameworkLegacy45" />
-      <ComponentRef Id="Npgsql.EntityFramework45" />
-      <ComponentRef Id="EntityFramework6_net45" />
+      <Feature Id="Npgsql45EntityFrameworkLegacy" Title="EntityFrameworkLegacy" Level="2" Description="EntityFrameworkLegacy45">
+        <ComponentRef Id="Npgsql.EntityFrameworkLegacy45" />
+      </Feature>
+      <Feature Id="Npgsql45EntityFramework" Title="EntityFrameworkLegacy" Level="2" Description="EntityFramework45">
+        <ComponentRef Id="Npgsql.EntityFramework45" />
+        <ComponentRef Id="EntityFramework6_net45" />
+      </Feature>
     </Feature>
 
     <UIRef Id="WixUI_FeatureTree" />
@@ -157,18 +167,18 @@
           <Component Id="EntityFramework6_net40" Guid="8d502018-f89a-4c7c-bf22-0f7a2f94f804">
             <File Id="EntityFramework6_net40"
                   Name="EntityFramework.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Release-net40\EntityFramework.dll"
+                  Source=".\packages\EntityFramework.6.0.1\lib\net40\EntityFramework.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
         </Directory>
       </Directory>
       <Directory Id="Dir11" Name="Dir11">
-        <Directory Id="EntityFramework6_net45EntityFramework45" Name="GAC">
+        <Directory Id="EntityFramework6_net45" Name="GAC">
           <Component Id="EntityFramework6_net45" Guid="e4f298c5-cb99-412e-b7fc-99147370fad0">
             <File Id="EntityFramework6_net45"
                   Name="EntityFramework.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Release-net45\EntityFramework.dll"
+                  Source=".\packages\EntityFramework.6.0.1\lib\net45\EntityFramework.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
