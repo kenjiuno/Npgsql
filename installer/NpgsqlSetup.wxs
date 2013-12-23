@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="772a9e26-9ab8-4011-bce6-d95b19d22b57"
-           Name="NpgsqlSetup"
+           Name="Npgsql $(var.ver) GAC"
            Language="1033"
-           Version="2.1.0.0"
+           Version="$(var.ver)"
            Manufacturer="You"
            UpgradeCode="df971e89-5e78-4142-9ed2-179c0255a800">
     <Package InstallerVersion="200"
@@ -18,19 +18,28 @@
     <Feature Id="Npgsql20" Title="Install .NET2.0 ver to GAC" Level="2" Description="Vs2005/Vs2008/Vs2010/Vs2012/Vs2013">
       <ComponentRef Id="Npgsql20" />
       <ComponentRef Id="Mono.Security20" />
+      <Feature Id="Npgsql20policy" Title="Publisher policy" Level="2">
+        <ComponentRef Id="policy.Npgsql_net20" />
+      </Feature>
     </Feature>
 
     <Feature Id="Npgsql35" Title="Install .NET3.5 ver to GAC" Level="2" Description="Vs2008/Vs2010/Vs2012/Vs2013">
       <ComponentRef Id="Npgsql35" />
       <ComponentRef Id="Mono.Security20" />
+      <?if $(var.EF) = 1 ?>
       <Feature Id="Npgsql35EntityFrameworkLegacy" Title="EntityFrameworkLegacy" Level="2">
         <ComponentRef Id="Npgsql.EntityFrameworkLegacy35" />
+      </Feature>
+      <?endif ?>
+      <Feature Id="Npgsql35policy" Title="Publisher policy" Level="2">
+        <ComponentRef Id="policy.Npgsql_net20" />
       </Feature>
     </Feature>
 
     <Feature Id="Npgsql40" Title="Install .NET4.0 ver to GAC" Level="2" Description="Vs2010/Vs2012/Vs2013">
       <ComponentRef Id="Npgsql40" />
       <ComponentRef Id="Mono.Security40" />
+      <?if $(var.EF) = 1 ?>
       <Feature Id="Npgsql40EntityFrameworkLegacy" Title="EntityFrameworkLegacy" Level="2" Description="EntityFrameworkLegacy40">
         <ComponentRef Id="Npgsql.EntityFrameworkLegacy40" />
       </Feature>
@@ -38,17 +47,26 @@
         <ComponentRef Id="Npgsql.EntityFramework40" />
         <ComponentRef Id="EntityFramework6_net40" />
       </Feature>
+      <?endif ?>
+      <Feature Id="Npgsql40policy" Title="Publisher policy" Level="2">
+        <ComponentRef Id="policy.Npgsql_net40" />
+      </Feature>
     </Feature>
 
     <Feature Id="Npgsql45" Title="Install .NET4.5 ver to GAC" Level="2" Description="Vs2012/Vs2013">
       <ComponentRef Id="Npgsql45" />
       <ComponentRef Id="Mono.Security40" />
+      <?if $(var.EF) = 1 ?>
       <Feature Id="Npgsql45EntityFrameworkLegacy" Title="EntityFrameworkLegacy" Level="2" Description="EntityFrameworkLegacy45">
         <ComponentRef Id="Npgsql.EntityFrameworkLegacy45" />
       </Feature>
       <Feature Id="Npgsql45EntityFramework" Title="EntityFrameworkLegacy" Level="2" Description="EntityFramework45">
         <ComponentRef Id="Npgsql.EntityFramework45" />
         <ComponentRef Id="EntityFramework6_net45" />
+      </Feature>
+      <?endif ?>
+      <Feature Id="Npgsql45policy" Title="Publisher policy" Level="2">
+        <ComponentRef Id="policy.Npgsql_net40" />
       </Feature>
     </Feature>
 
@@ -64,7 +82,7 @@
           <Component Id="Npgsql20" Guid="8ccf75c9-f622-44f2-ad75-2365042dd366">
             <File Id="Npgsql20"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql\bin\Release-net20\Npgsql.dll"
+                  Source=".\Npgsql$(var.ver)-bin-ms.net2.0\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -75,7 +93,7 @@
           <Component Id="Npgsql35" Guid="9ab5982b-5680-4e2a-839b-8914120e2949">
             <File Id="Npgsql35"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql\bin\Release-net35\Npgsql.dll"
+                  Source=".\Npgsql$(var.ver)-bin-ms.net3.5sp1\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -87,7 +105,7 @@
           <Component Id="Npgsql40" Guid="93e5b40a-2798-4238-ada4-380d49dff8b2">
             <File Id="Npgsql40"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql\bin\Release-net40\Npgsql.dll"
+                  Source=".\Npgsql$(var.ver)-bin-ms.net4.0\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -98,19 +116,21 @@
           <Component Id="Npgsql45" Guid="f842fa5e-5623-41aa-80aa-6d2e5bf97435">
             <File Id="Npgsql45"
                   Name="Npgsql.dll"
-                  Source=".\Npgsql\bin\Release-net45\Npgsql.dll"
+                  Source=".\Npgsql$(var.ver)-bin-ms.net4.5\Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
         </Directory>
       </Directory>
 
+      <?if $(var.EF) = 1 ?>
+      
       <Directory Id="Dir5" Name="Dir5">
         <Directory Id="Npgsql.EntityFrameworkLegacy35" Name="GAC">
           <Component Id="Npgsql.EntityFrameworkLegacy35" Guid="df5d1399-28a6-43de-9c98-1d3e17d3a45b">
             <File Id="Npgsql.EntityFrameworkLegacy35"
                   Name="Npgsql.EntityFrameworkLegacy.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Legacy-Release-net35\Npgsql.EntityFrameworkLegacy.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net3.5sp1\Npgsql.EntityFrameworkLegacy.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -121,7 +141,7 @@
           <Component Id="Npgsql.EntityFrameworkLegacy40" Guid="95ed4f0f-67f4-4a7c-b81b-e1ee477aa9eb">
             <File Id="Npgsql.EntityFrameworkLegacy40"
                   Name="Npgsql.EntityFrameworkLegacy.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Legacy-Release-net40\Npgsql.EntityFrameworkLegacy.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.0\Npgsql.EntityFrameworkLegacy.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -132,7 +152,7 @@
           <Component Id="Npgsql.EntityFrameworkLegacy45" Guid="4e287492-e2e8-4b6a-b5d6-f8f579be224c">
             <File Id="Npgsql.EntityFrameworkLegacy45"
                   Name="Npgsql.EntityFrameworkLegacy.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Legacy-Release-net45\Npgsql.EntityFrameworkLegacy.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.5\Npgsql.EntityFrameworkLegacy.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -144,7 +164,7 @@
           <Component Id="Npgsql.EntityFramework40" Guid="f928cb58-e6e5-45fd-aa43-1b758cbc397d">
             <File Id="Npgsql.EntityFramework40"
                   Name="Npgsql.EntityFramework.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Release-net40\Npgsql.EntityFramework.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.0\Npgsql.EntityFramework.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -155,7 +175,7 @@
           <Component Id="Npgsql.EntityFramework45" Guid="79ff6d80-b56d-4775-be4a-15912fd46156">
             <File Id="Npgsql.EntityFramework45"
                   Name="Npgsql.EntityFramework.dll"
-                  Source=".\Npgsql.EntityFramework\bin\Release-net45\Npgsql.EntityFramework.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.5\Npgsql.EntityFramework.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -167,7 +187,7 @@
           <Component Id="EntityFramework6_net40" Guid="8d502018-f89a-4c7c-bf22-0f7a2f94f804">
             <File Id="EntityFramework6_net40"
                   Name="EntityFramework.dll"
-                  Source=".\packages\EntityFramework.6.0.1\lib\net40\EntityFramework.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.0\EntityFramework.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -178,19 +198,21 @@
           <Component Id="EntityFramework6_net45" Guid="e4f298c5-cb99-412e-b7fc-99147370fad0">
             <File Id="EntityFramework6_net45"
                   Name="EntityFramework.dll"
-                  Source=".\packages\EntityFramework.6.0.1\lib\net45\EntityFramework.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.5\EntityFramework.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
         </Directory>
       </Directory>
+      
+      <?endif ?>
 
       <Directory Id="Dir12" Name="Dir12">
         <Directory Id="Mono.Security20" Name="GAC">
           <Component Id="Mono.Security20" Guid="f0296733-d063-4bef-900f-70af3f904625">
             <File Id="Mono.Security20"
                   Name="Mono.Security.dll"
-                  Source=".\lib\Mono.Security\2.0\Mono.Security.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net2.0\Mono.Security.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
@@ -201,7 +223,30 @@
           <Component Id="Mono.Security40" Guid="15efb59f-77a2-4aee-9ce8-6cfd2c3091b9">
             <File Id="Mono.Security40"
                   Name="Mono.Security.dll"
-                  Source=".\lib\Mono.Security\4.0\Mono.Security.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.0\Mono.Security.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="Dir14" Name="Dir14">
+        <Directory Id="policy.Npgsql_net20" Name="GAC">
+          <Component Id="policy.Npgsql_net20" Guid="a2e92dd2-8297-4570-a066-cfe0ffc775cb">
+            <File Id="policy.Npgsql_net20"
+                  Name="policy.2.0.Npgsql.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net2.0\policy.2.0.Npgsql.dll"
+                  KeyPath="yes"
+                  Assembly=".net" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="Dir15" Name="Dir15">
+        <Directory Id="policy.Npgsql_net40" Name="GAC">
+          <Component Id="policy.Npgsql_net40" Guid="217b8a59-c946-463b-9f45-f8eddcfc4e14">
+            <File Id="policy.Npgsql_net40"
+                  Name="policy.2.0.Npgsql.dll"
+                  Source=".\Npgsql2.0.14.3-bin-ms.net4.0\policy.2.0.Npgsql.dll"
                   KeyPath="yes"
                   Assembly=".net" />
           </Component>
