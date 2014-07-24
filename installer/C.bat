@@ -1,1 +1,1 @@
-candle -dVER=2.0.14.3 -dEF=0 NpgsqlSetup.wxs && light -ext WixUIExtension NpgsqlSetup.wixobj
+candle -dVER=2.1.3.0 -dEF=0 -ext WixUtilExtension NpgsqlSetup.wxs && light -ext WixUIExtension -ext WixUtilExtension NpgsqlSetup.wixobj
