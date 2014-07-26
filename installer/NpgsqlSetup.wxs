@@ -12,7 +12,11 @@
     Npgsql-2.2.0.0-net45
     NpgsqlSetup.wxs
     README.rtf
-    
+
+  WiX Toolset:
+    WiX Toolset v3.8 RTM build is v3.8.1128.0.
+    WiX v3.9.721.0 Release  
+
     -->
   <Product Id="772a9e26-9ab8-4011-bce6-d95b19d22b57"
            Name="Npgsql $(var.VER)"
@@ -61,28 +65,24 @@
     <!-- http://blogs.msdn.com/b/heaths/archive/2006/09/20/installing-assemblies-for-runtime-and-design_2d00_time-use.aspx -->
     <!-- http://stackoverflow.com/questions/17090689/wix-deploy-two-assemblies-to-gac -->
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="Dir4" Name="Dir4">
-        <Directory Id="Npgsql45" Name="GAC">
-          <Component Id="Npgsql45" Guid="f842fa5e-5623-41aa-80aa-6d2e5bf97435">
-            <File Id="Npgsql45"
-                  Name="Npgsql.dll"
-                  Source=".\Npgsql-$(var.VER)-net45\Npgsql.dll"
-                  KeyPath="yes"
-                  Assembly=".net" />
-          </Component>
-        </Directory>
+      <Directory Id="Npgsql45" Name="GAC">
+        <Component Id="Npgsql45" Guid="f842fa5e-5623-41aa-80aa-6d2e5bf97435">
+          <File Id="Npgsql45"
+                Name="Npgsql.dll"
+                Source=".\Npgsql-$(var.VER)-net45\Npgsql.dll"
+                KeyPath="yes"
+                Assembly=".net" />
+        </Component>
       </Directory>
 
-      <Directory Id="Dir13" Name="Dir13">
-        <Directory Id="Mono.Security40" Name="GAC">
-          <Component Id="Mono.Security40" Guid="15efb59f-77a2-4aee-9ce8-6cfd2c3091b9">
-            <File Id="Mono.Security40"
-                  Name="Mono.Security.dll"
-                  Source=".\Npgsql-$(var.VER)-net45\Mono.Security.dll"
-                  KeyPath="yes"
-                  Assembly=".net" />
+      <Directory Id="Mono.Security40" Name="GAC">
+        <Component Id="Mono.Security40" Guid="15efb59f-77a2-4aee-9ce8-6cfd2c3091b9">
+          <File Id="Mono.Security40"
+                Name="Mono.Security.dll"
+                Source=".\Npgsql-$(var.VER)-net45\Mono.Security.dll"
+                KeyPath="yes"
+                Assembly=".net" />
           </Component>
-        </Directory>
       </Directory>
 
       <!-- http://stackoverflow.com/questions/791455/how-do-i-modify-machine-config-via-an-msi-package -->
@@ -165,6 +165,7 @@
                 Action="create" 
                     On="uninstall"
            ElementPath="//configuration/system.data/DbProviderFactories" 
+            VerifyPath="//configuration/system.data/DbProviderFactories" 
                   Name="remove"
                   Node="element" 
               Sequence="1"> 
