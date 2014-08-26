@@ -9,7 +9,8 @@
 
 !define APP "Npgsql"
 !define VER "2.2.0.0"
-!define PRIVER "KU20140725-a846e688"
+!define PRIVER "KU20140825-8f70c8b7"
+; KU20140725-a846e688
 
 !define ASM1 "Npgsql, Version=2.2.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
 !define ASM3 "Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"
