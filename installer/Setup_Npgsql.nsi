@@ -9,7 +9,7 @@
 
 !define APP "Npgsql"
 !define VER "2.2.0.0"
-!define PRIVER "KU20140825-8f70c8b7"
+!define PRIVER "KU20140827-8f70c8b7"
 ; KU20140725-a846e688
 
 !define ASM1 "Npgsql, Version=2.2.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
@@ -57,7 +57,29 @@ Section ""
   
   SetOutPath "$INSTDIR\Npgsql-${VER}-net45"
   File                "Npgsql-${VER}-net45\*.dll"
+  File                "Npgsql-${VER}-net45\NpgsqlDdexProvider.vsix"
 
+SectionEnd
+
+Section "Uninst NpgsqlDdexProvider"
+  SectionIn 2
+
+  StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+
+  ${If} ${FileExists} $1
+    ExecWait '"$1" /u:958b9481-2712-4670-9a62-8fe65e5beea7' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
 SectionEnd
 
 Section "Uninst Npgsql.dll from GAC"
@@ -147,4 +169,25 @@ Section "Inst Npgsql DbProviderFactory to machine.config"
     ExecWait '$0' $1
     DetailPrint "RetCode: $1"
   ${EndIF}
+SectionEnd
+
+Section "Inst NpgsqlDdexProvider"
+  SectionIn 1
+
+  StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+
+  ${If} ${FileExists} $1
+    ExecWait '"$1" "$INSTDIR\Npgsql-${VER}-net45\NpgsqlDdexProvider.vsix"' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
 SectionEnd
