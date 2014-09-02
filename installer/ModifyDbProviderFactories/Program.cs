@@ -65,9 +65,6 @@ namespace ModifyDbProviderFactories {
                     .Elements("add")
                     .Where(p => p.Attribute("invariant") != null && p.Attribute("invariant").Value == args[2])
                     ) {
-                    el.AddAfterSelf(
-                        new XComment(el.ToString())
-                        );
                     el.Remove();
                 }
                 xApp.Save(args[1]);
@@ -76,7 +73,6 @@ namespace ModifyDbProviderFactories {
                 xApp.Load(args[1]);
                 var DbProviderFactories = xApp.SelectSingleNode("/configuration/system.data/DbProviderFactories");
                 foreach (XmlElement el in DbProviderFactories.SelectNodes("add[@invariant='" + args[2] + "']")) {
-                    el.ParentNode.InsertAfter(xApp.CreateComment(el.OuterXml), el);
                     el.ParentNode.RemoveChild(el);
                 }
                 xApp.Save(args[1]);
