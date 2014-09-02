@@ -1,5 +1,13 @@
 ; Setup_Npgsql.nsi
 
+; For build servers
+; - Get NSIS 2.46 and install it. http://nsis.sourceforge.net/Download
+; - Get experienceui-1.3.1.exe and install it. http://nsis.sourceforge.net/ExperienceUI
+
+; For editors
+; - Get nisedit2.0.3.exe and install it. http://hmne.sourceforge.net/
+; - Associate .nsi with "C:\Program Files (x86)\HMSoft\NIS Edit\nisedit.exe"
+
 ;--------------------------------
 
 !define APP "Npgsql"
