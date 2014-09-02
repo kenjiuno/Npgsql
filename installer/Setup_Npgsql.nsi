@@ -1,19 +1,15 @@
-; example1.nsi
-;
-; This script is perhaps one of the simplest NSIs you can make. All of the
-; optional settings are left to their default settings. The installer simply 
-; prompts the user asking them where to install, and drops a copy of example1.nsi
-; there. 
+; Setup_Npgsql.nsi
 
 ;--------------------------------
 
 !define APP "Npgsql"
-!define TTL "Npgsql - .Net Data Provider for Postgresql"
 !define COM "The Npgsql Development Team"
 !define VER "2.2.0.0"
 !define PRIVER "Final-Release"
 ; KU20140829-8f70c8b7
 ; KU20140725-a846e688
+
+!define TTL "Npgsql ${VER} - .Net Data Provider for Postgresql"
 
 !define ASM1 "Npgsql, Version=2.2.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
 !define ASM3 "Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"
@@ -21,7 +17,7 @@
 !define FAC "Npgsql.NpgsqlFactory, ${ASM1}"
 
 ; The name of the installer
-Name "${APP} ${VER}"
+Name "${APP} ${VER} ${PRIVER}"
 
 ; The file to write
 OutFile "Setup_${APP}-${VER}-${PRIVER}.exe"
@@ -38,20 +34,32 @@ RequestExecutionLevel admin
 
 !include "LogicLib.nsh"
 
+; ExperienceUI
+; http://nsis.sourceforge.net/ExperienceUI
+; Download [experienceui-1.3.1.exe] (934 KB) and install it.
+!include "XPUI.nsh"
+
+Icon "${NSISDIR}\ExperienceUI\Contrib\Graphics\Icons\XPUI-install.ico"
+Icon "${NSISDIR}\ExperienceUI\Contrib\Graphics\Icons\XPUI-uninstall.ico"
+
 ;--------------------------------
 
 ; Pages
 
-Page license
-Page directory
-Page components
-Page instfiles
+  ${LicensePage} "License.rtf"
+  ${Page} Components
+  ${Page} Directory
+  ${Page} InstFiles
 
-UninstPage uninstConfirm
-UninstPage components
-UninstPage instfiles
+  !insertmacro XPUI_PAGEMODE_UNINST
+  !insertmacro XPUI_PAGE_UNINSTCONFIRM_NSIS
+  !insertmacro XPUI_PAGE_COMPONENTS
+  !insertmacro XPUI_PAGE_INSTFILES
 
-LicenseData README.rtf
+;--------------------------------
+;Languages
+
+  !insertmacro XPUI_LANGUAGE "English"
 
 ;--------------------------------
 
@@ -72,21 +80,21 @@ Section ""
 
 SectionEnd
 
-Section "Npgsql.dll (.NET4.5) to GAC"
+Section "Npgsql.dll (.NET4.5) to GAC" SecNpgsql
   SetOutPath "$INSTDIR"
 
   ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Npgsql.dll"' $0
   DetailPrint "RetCode: $0"
 SectionEnd
 
-Section "Mono.Security.dll to GAC"
+Section "Mono.Security.dll to GAC" SecMonoSecurity
   SetOutPath "$INSTDIR"
 
   ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Mono.Security.dll"' $0
   DetailPrint "RetCode: $0"
 SectionEnd
 
-Section "Npgsql DbProviderFactory to machine.config"
+Section "Npgsql DbProviderFactory to machine.config" SecMachineConfig
   SetOutPath "$INSTDIR"
 
   ${If} ${FileExists} "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
@@ -120,7 +128,7 @@ Section "Npgsql DbProviderFactory to machine.config"
   ${EndIF}
 SectionEnd
 
-Section "NpgsqlDdexProvider(Vs2012/Vs2013)"
+Section "NpgsqlDdexProvider(Vs2012/Vs2013)" SecDdex2013
   SetOutPath "$INSTDIR"
 
   StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
@@ -141,7 +149,7 @@ Section "NpgsqlDdexProvider(Vs2012/Vs2013)"
   ${EndIf}
 SectionEnd
 
-Section "NpgsqlDdexProvider(Vs2010)"
+Section "NpgsqlDdexProvider(Vs2010)" SecDdex2010
   SetOutPath "$INSTDIR"
 
   StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
@@ -164,14 +172,20 @@ Section ""
   WriteRegStr HKLM "SOFTWARE\${COM}\${APP}" "Install_Dir" "$INSTDIR"
 
   ; Write the uninstall keys for Windows
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "DisplayIcon" "$INSTDIR\uninstall.exe"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "DisplayName" "${TTL}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "DisplayVersion" "${VER}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "Publisher" "${COM}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP}" "NoRepair" 1
   WriteUninstaller "$INSTDIR\uninstall.exe"
 SectionEnd
 
-Section "un.NpgsqlDdexProvider(Vs2012/Vs2013)"
+;--------------------------------
+;Uninstaller Section
+
+Section "un.Remove NpgsqlDdexProvider(Vs2012/Vs2013)" UnDdex2013
   StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
   ${IfNot} ${FileExists} $1
     StrCpy $0 ""
@@ -190,7 +204,7 @@ Section "un.NpgsqlDdexProvider(Vs2012/Vs2013)"
   ${EndIf}
 SectionEnd
 
-Section "un.NpgsqlDdexProvider(Vs2010)"
+Section "un.Remove NpgsqlDdexProvider(Vs2010)" UnDdex2010
   StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
   ${IfNot} ${FileExists} $1
     StrCpy $0 ""
@@ -204,17 +218,17 @@ Section "un.NpgsqlDdexProvider(Vs2010)"
   ${EndIf}
 SectionEnd
 
-Section "un.Remove Npgsql.dll from GAC"
+Section "un.Remove Npgsql.dll from GAC" UnNpgsql
   ExecWait '"$INSTDIR\GACRemove.exe" "${ASM1}"' $0
   DetailPrint "RetCode: $0"
 SectionEnd
 
-Section "un.Remove Mono.Security.dll from GAC"
+Section "un.Remove Mono.Security.dll from GAC" UnMonoSecurity
   ExecWait '"$INSTDIR\GACRemove.exe" "${ASM3}"' $0
   DetailPrint "RetCode: $0"
 SectionEnd
 
-Section "un.Remove Npgsql DbProviderFactory from machine.config"
+Section "un.Remove Npgsql DbProviderFactory from machine.config" UnMachineConfig
   ${If} ${FileExists}                                            "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
     ExecWait '"$INSTDIR\ModifyDbProviderFactories.exe" "/remove" "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config" "Npgsql"' $0
     DetailPrint "RetCode: $0"
@@ -250,3 +264,35 @@ Section "un."
   ; Remove directories used
   RMDir "$INSTDIR"
 SectionEnd
+
+
+;--------------------------------
+;Descriptions
+
+  ;Language strings
+  LangString DESC_SecNpgsql        ${LANG_ENGLISH} "Install Npgsql.dll into your GAC. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
+  LangString DESC_SecMonoSecurity  ${LANG_ENGLISH} "Install Mono.Security.dll (required by Npgsql.dll) into your GAC. "
+  LangString DESC_SecMachineConfig ${LANG_ENGLISH} "Install Npgsql DbProviderFactory to machine.config. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
+  LangString DESC_SecDdex2013      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2012/2013"
+  LangString DESC_SecDdex2010      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2010"
+
+  LangString DESC_UnNpgsql        ${LANG_ENGLISH} "Uninstall Npgsql.dll from your GAC."
+  LangString DESC_UnMonoSecurity  ${LANG_ENGLISH} "Uninstall Mono.Security.dll from your GAC."
+  LangString DESC_UnMachineConfig ${LANG_ENGLISH} "Uninstall Npgsql DbProviderFactory from machine.config."
+  LangString DESC_UnDdex2013      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2012/2013"
+  LangString DESC_UnDdex2010      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2010"
+
+  ;Assign language strings to sections
+  !insertmacro XPUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecNpgsql}        $(DESC_SecNpgsql)
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecMonoSecurity}  $(DESC_SecMonoSecurity)
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecMachineConfig} $(DESC_SecMachineConfig)
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2013}      $(DESC_SecDdex2013)
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2010}      $(DESC_SecDdex2010)
+
+    ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnNpgsql}        $(DESC_UnNpgsql)
+    ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnMonoSecurity}  $(DESC_UnMonoSecurity)
+    ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnMachineConfig} $(DESC_UnMachineConfig)
+    ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnDdex2013}      $(DESC_UnDdex2013)
+    ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnDdex2010}      $(DESC_UnDdex2010)
+  !insertmacro XPUI_FUNCTION_DESCRIPTION_END
