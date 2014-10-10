@@ -13,19 +13,13 @@
 !define APP "Npgsql"
 !define COM "The Npgsql Development Team"
 !define VER "2.2.0-rc2"
-!define ASMVER "2.2.0.0"
 
 !define TTL "Npgsql ${VER} - .Net Data Provider for Postgresql"
 
-!define ASM1 "Npgsql, Version=${ASMVER}, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7"
-!define ASM3 "Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"
-
-!define FAC "Npgsql.NpgsqlFactory, ${ASM1}"
-
-!ifndef NET40 && NET45
- !define NET40
- !define NET45
-!endif
+; !define NET40
+; !define NET45
+; !define DDEX2010
+; !define DDEX2013
 
 ; The name of the installer
 Name "${APP} ${VER}"
@@ -74,6 +68,19 @@ Icon "${NSISDIR}\ExperienceUI\Contrib\Graphics\Icons\XPUI-uninstall.ico"
 
 ;--------------------------------
 
+!macro GetAssemblyName FilePath ; out $0
+  nsExec::ExecToStack '"$INSTDIR\PrintAssemblyName.exe" "${FilePath}"'
+  Pop $0
+  ${If} $0 = 0
+    Pop $0
+  ${Else}
+    Pop $0
+    StrCpy $0 ""
+  ${EndIf}
+!macroend
+
+Var FAC
+
 ; The stuff to install
 Section ""
   SetOutPath "$INSTDIR"
@@ -81,8 +88,23 @@ Section ""
   File /x "*.vshost.*" "tools\GACInstall.*"
   File /x "*.vshost.*" "tools\GACRemove.*"
   File /x "*.vshost.*" "tools\ModifyDbProviderFactories.*"
-  
+  File /x "*.vshost.*" "tools\PrintAssemblyName.*"
+
 SectionEnd
+
+!ifdef DDEX2013
+Section ""
+  SetOutPath "$INSTDIR\Npgsql-${VER}-net45"
+  File                "..\NpgsqlDdexProvider\bin\Release-net45\NpgsqlDdexProvider.vsix" ;Vs2012/Vs2013
+SectionEnd
+!endif
+
+!ifdef DDEX2010
+Section ""
+  SetOutPath "$INSTDIR\Npgsql-${VER}-net40"
+  File                "..\NpgsqlDdexProvider\bin\Release-net40\NpgsqlDdexProvider.vsix" ;Vs2010
+SectionEnd
+!endif
 
 !ifdef NET45
 
@@ -92,7 +114,6 @@ Section ""
   File                "..\Npgsql.EntityFramework\bin\Release-net45\Npgsql.EntityFramework.dll"
   File                "..\Npgsql.EntityFramework\bin\Release-net45\Npgsql.EntityFramework.dll.config"
   File                "..\Npgsql.EntityFramework\bin\Legacy-Release-net45\Npgsql.EntityFrameworkLegacy.dll"
-  File                "..\NpgsqlDdexProvider\bin\Release-net45\NpgsqlDdexProvider.vsix" ;Vs2012/Vs2013
 SectionEnd
 
 Section "Npgsql.dll (.NET4.5) to GAC" SecNpgsql
@@ -100,6 +121,25 @@ Section "Npgsql.dll (.NET4.5) to GAC" SecNpgsql
 
   ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Npgsql.dll"' $0
   DetailPrint "RetCode: $0"
+  
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Npgsql.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Npgsql.dll" "$0"
+SectionEnd
+
+Section "Common.Logging to GAC" SecCommonLogging ; net45
+  SetOutPath "$INSTDIR"
+
+  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.Core.dll"' $0
+  DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.Core.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.Core.dll" "$0"
+
+  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.dll"' $0
+  DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.dll" "$0"
 SectionEnd
 
 !else ifdef NET40
@@ -110,27 +150,28 @@ Section ""
   File                "..\Npgsql.EntityFramework\bin\Release-net40\Npgsql.EntityFramework.dll"
   File                "..\Npgsql.EntityFramework\bin\Release-net40\Npgsql.EntityFramework.dll.config"
   File                "..\Npgsql.EntityFramework\bin\Legacy-Release-net40\Npgsql.EntityFrameworkLegacy.dll"
-  File                "..\NpgsqlDdexProvider\bin\Release-net40\NpgsqlDdexProvider.vsix" ;Vs2010
 SectionEnd
 
-Section "Npgsql.dll (.NET4.0) to GAC" SecNpgsql
+Section "Npgsql.dll (.NET4.0) to GAC" SecNpgsql ; net40
   SetOutPath "$INSTDIR"
 
   ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net40\Npgsql.dll"' $0
   DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net40\Npgsql.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Npgsql.dll" "$0"
 SectionEnd
 
 !endif
 
-Section "Mono.Security.dll to GAC" SecMonoSecurity
-  SetOutPath "$INSTDIR"
-
-  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Mono.Security.dll"' $0
-  DetailPrint "RetCode: $0"
-SectionEnd
+!ifdef NET40 || NET45
 
 Section "Npgsql DbProviderFactory to machine.config" SecMachineConfig
   SetOutPath "$INSTDIR"
+
+  ReadRegStr $0 HKLM "SOFTWARE\${COM}\${APP}" "Npgsql.dll"
+  StrCpy $FAC "Npgsql.NpgsqlFactory, $0"
+  WriteRegStr   HKLM "SOFTWARE\${COM}\${APP}" "Npgsql.NpgsqlFactory" "$FAC"
 
   ${If} ${FileExists} "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
     StrCpy $0 '"$INSTDIR\ModifyDbProviderFactories.exe"'
@@ -139,7 +180,7 @@ Section "Npgsql DbProviderFactory to machine.config" SecMachineConfig
     StrCpy $0 '$0 "Npgsql Data Provider"'
     StrCpy $0 '$0 "Npgsql"'
     StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 "${FAC}"'
+    StrCpy $0 '$0 "$FAC"'
     StrCpy $0 '$0 "support"'
     StrCpy $0 '$0 "FF"'
 
@@ -154,7 +195,7 @@ Section "Npgsql DbProviderFactory to machine.config" SecMachineConfig
     StrCpy $0 '$0 "Npgsql Data Provider"'
     StrCpy $0 '$0 "Npgsql"'
     StrCpy $0 '$0 ".Net Data Provider for PostgreSQL"'
-    StrCpy $0 '$0 "${FAC}"'
+    StrCpy $0 '$0 "$FAC"'
     StrCpy $0 '$0 "support"'
     StrCpy $0 '$0 "FF"'
 
@@ -163,7 +204,9 @@ Section "Npgsql DbProviderFactory to machine.config" SecMachineConfig
   ${EndIF}
 SectionEnd
 
-!ifdef NET45
+!endif
+
+!ifdef DDEX2013
 
 Section "NpgsqlDdexProvider(Vs2012/Vs2013)" SecDdex2013
   SetOutPath "$INSTDIR"
@@ -188,7 +231,7 @@ SectionEnd
 
 !endif
 
-!ifdef NET40
+!ifdef DDEX2010
 
 Section "NpgsqlDdexProvider(Vs2010)" SecDdex2010
   SetOutPath "$INSTDIR"
@@ -228,7 +271,7 @@ SectionEnd
 ;--------------------------------
 ;Uninstaller Section
 
-!ifdef NET45
+!ifdef DDEX2013
 
 Section "un.Remove NpgsqlDdexProvider(Vs2012/Vs2013)" UnDdex2013
   StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
@@ -251,7 +294,7 @@ SectionEnd
 
 !endif
 
-!ifdef NET40
+!ifdef DDEX2010
 
 Section "un.Remove NpgsqlDdexProvider(Vs2010)" UnDdex2010
   StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
@@ -272,14 +315,26 @@ SectionEnd
 !ifdef NET40 || NET45
 
 Section "un.Remove Npgsql.dll from GAC" UnNpgsql
-  ExecWait '"$INSTDIR\GACRemove.exe" "${ASM1}"' $0
+  ; Npgsql.dll
+  ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Npgsql.dll"
+  
+  ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
   DetailPrint "RetCode: $0"
 SectionEnd
 
-!endif
+Section "un.Remove Common.Logging from GAC" UnLoggingCommon
+  ; Common.Logging.dll
+  StrCpy $2 ""
+  ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Common.Logging.dll"
 
-Section "un.Remove Mono.Security.dll from GAC" UnMonoSecurity
-  ExecWait '"$INSTDIR\GACRemove.exe" "${ASM3}"' $0
+  ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
+  DetailPrint "RetCode: $0"
+
+  ; Common.Logging.Core.dll
+  StrCpy $2 ""
+  ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Common.Logging.Core.dll"
+
+  ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
   DetailPrint "RetCode: $0"
 SectionEnd
 
@@ -296,12 +351,15 @@ Section "un.Remove Npgsql DbProviderFactory from machine.config" UnMachineConfig
 
 SectionEnd
 
+!endif
+
 Section "un."
   ; Remove files
   Delete "$INSTDIR\GACInstall.*"
   Delete "$INSTDIR\GACRemove.*"
   Delete "$INSTDIR\ModifyDbProviderFactories.*"
-  
+  Delete "$INSTDIR\PrintAssemblyName.*"
+
   Delete "$INSTDIR\Npgsql-${VER}-net45\*.dll"
   Delete "$INSTDIR\Npgsql-${VER}-net45\NpgsqlDdexProvider.vsix"
   RMDir  "$INSTDIR\Npgsql-${VER}-net45"
@@ -326,34 +384,34 @@ SectionEnd
 
   ;Language strings
   LangString DESC_SecNpgsql        ${LANG_ENGLISH} "Install Npgsql.dll into your GAC. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
-  LangString DESC_SecMonoSecurity  ${LANG_ENGLISH} "Install Mono.Security.dll (required by Npgsql.dll) into your GAC. "
+  LangString DESC_SecCommonLogging ${LANG_ENGLISH} "Install Common.Logging (required by Npgsql.dll) into your GAC. "
   LangString DESC_SecMachineConfig ${LANG_ENGLISH} "Install Npgsql DbProviderFactory to machine.config. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
   LangString DESC_SecDdex2013      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2012/2013"
   LangString DESC_SecDdex2010      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2010"
 
   LangString DESC_UnNpgsql        ${LANG_ENGLISH} "Uninstall Npgsql.dll from your GAC."
-  LangString DESC_UnMonoSecurity  ${LANG_ENGLISH} "Uninstall Mono.Security.dll from your GAC."
+  LangString DESC_UnCommonLogging ${LANG_ENGLISH} "Uninstall Common.Logging from your GAC."
   LangString DESC_UnMachineConfig ${LANG_ENGLISH} "Uninstall Npgsql DbProviderFactory from machine.config."
   LangString DESC_UnDdex2013      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2012/2013"
   LangString DESC_UnDdex2010      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2010"
 
   ;Assign language strings to sections
   !insertmacro XPUI_FUNCTION_DESCRIPTION_BEGIN
-!ifdef NET40 || NET45
+  !ifdef NET40 || NET45
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecNpgsql}        $(DESC_SecNpgsql)
-!endif
-    !insertmacro XPUI_DESCRIPTION_TEXT ${SecMonoSecurity}  $(DESC_SecMonoSecurity)
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecCommonLogging} $(DESC_SecCommonLogging)
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecMachineConfig} $(DESC_SecMachineConfig)
-!ifdef NET45
+  !endif
+  !ifdef DDEX2013
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2013}      $(DESC_SecDdex2013)
-!endif
-!ifdef NET40
+  !endif
+  !ifdef DDEX2010
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2010}      $(DESC_SecDdex2010)
-!endif
+  !endif
+  !insertmacro XPUI_FUNCTION_DESCRIPTION_END
 
     ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnNpgsql}        $(DESC_UnNpgsql)
     ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnMonoSecurity}  $(DESC_UnMonoSecurity)
     ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnMachineConfig} $(DESC_UnMachineConfig)
     ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnDdex2013}      $(DESC_UnDdex2013)
     ;!insertmacro XPUI_DESCRIPTION_TEXT ${UnDdex2010}      $(DESC_UnDdex2010)
-  !insertmacro XPUI_FUNCTION_DESCRIPTION_END
