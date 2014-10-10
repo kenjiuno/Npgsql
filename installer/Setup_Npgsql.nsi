@@ -12,7 +12,7 @@
 
 !define APP "Npgsql"
 !define COM "The Npgsql Development Team"
-!define VER "2.2.0-rc2"
+!define VER "3.0.0"
 
 !define TTL "Npgsql ${VER} - .Net Data Provider for Postgresql"
 
