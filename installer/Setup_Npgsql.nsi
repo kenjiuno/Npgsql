@@ -12,7 +12,10 @@
 
 !define APP "Npgsql"
 !define COM "The Npgsql Development Team"
-!define VER "3.0.0"
+
+!ifndef VER
+  !define VER "version-unknown"
+!endif
 
 !define TTL "Npgsql ${VER} - .Net Data Provider for Postgresql"
 
@@ -25,7 +28,7 @@
 Name "${APP} ${VER}"
 
 ; The file to write
-OutFile "Setup_${APP}-${VER}.exe"
+OutFile "installer.exe" ; "Setup_${APP}-${VER}.exe"
 
 ; The default installation directory
 InstallDir "$PROGRAMFILES\${COM}\${APP}"
