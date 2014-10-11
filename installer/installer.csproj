@@ -32,9 +32,9 @@
       <Output TaskParameter="Assemblies" ItemName="Npgsql" />
     </GetAssemblyIdentity>
     <!-- Build full(NET45,DDEX2013,DDEX2010) setup. for Vs2012/Vs2013 -->
-    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DDDEX2010 /DVER=%(Npgsql.Version) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
+    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DMONO_SECURITY /DDDEX2010 /DVER=%(Npgsql.Version) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
     <!-- Build partial(NET40,DDEX2010) setup. for Vs2010 -->
-    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET40 /DDDEX2010 /DVER=%(Npgsql.Version) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
+    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET40 /DDDEX2010 /DMONO_SECURITY /DVER=%(Npgsql.Version) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
     <!-- Copy installer.exe to Setup_Npgsql_x.y.z.w.exe -->
     <Copy SourceFiles="installer.exe" DestinationFiles="Setup_Npgsql-%(Npgsql.Version).exe" />
   </Target>

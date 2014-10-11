@@ -10,6 +10,16 @@
 
 ;--------------------------------
 
+; !define VER "2.2.1.0"
+; !define NET40
+;   !define MONO_SECURITY
+;   !define COMMON_LOGGING
+; !define NET45
+;   !define MONO_SECURITY
+;   !define COMMON_LOGGING
+; !define DDEX2010
+; !define DDEX2013
+
 !define APP "Npgsql"
 !define COM "The Npgsql Development Team"
 
@@ -18,11 +28,6 @@
 !endif
 
 !define TTL "Npgsql ${VER} - .Net Data Provider for Postgresql"
-
-; !define NET40
-; !define NET45
-; !define DDEX2010
-; !define DDEX2013
 
 ; The name of the installer
 Name "${APP} ${VER}"
@@ -119,7 +124,7 @@ Section ""
   File                "..\Npgsql.EntityFramework\bin\Legacy-Release-net45\Npgsql.EntityFrameworkLegacy.dll"
 SectionEnd
 
-Section "Npgsql.dll (.NET4.5) to GAC" SecNpgsql
+Section "Npgsql.dll (.NET4.5) to GAC" SecNpgsql ; net45
   SetOutPath "$INSTDIR"
 
   ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Npgsql.dll"' $0
@@ -129,6 +134,19 @@ Section "Npgsql.dll (.NET4.5) to GAC" SecNpgsql
   WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Npgsql.dll" "$0"
 SectionEnd
 
+!ifdef MONO_SECURITY
+Section "Mono.Security.dll to GAC" SecMonoSecurity ; net45
+  SetOutPath "$INSTDIR"
+
+  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Mono.Security.dll"' $0
+  DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Mono.Security.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Mono.Security.dll" "$0"
+SectionEnd
+!endif
+
+!ifdef COMMON_LOGGING
 Section "Common.Logging to GAC" SecCommonLogging ; net45
   SetOutPath "$INSTDIR"
 
@@ -144,6 +162,7 @@ Section "Common.Logging to GAC" SecCommonLogging ; net45
   !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.dll"
   WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.dll" "$0"
 SectionEnd
+!endif
 
 !else ifdef NET40
 
@@ -164,6 +183,36 @@ Section "Npgsql.dll (.NET4.0) to GAC" SecNpgsql ; net40
   !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net40\Npgsql.dll"
   WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Npgsql.dll" "$0"
 SectionEnd
+
+!ifdef MONO_SECURITY
+Section "Mono.Security.dll to GAC" SecMonoSecurity ; net40
+  SetOutPath "$INSTDIR"
+
+  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net40\Mono.Security.dll"' $0
+  DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net40\Mono.Security.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Mono.Security.dll" "$0"
+SectionEnd
+!endif
+
+!ifdef COMMON_LOGGING
+Section "Common.Logging to GAC" SecCommonLogging ; net40
+  SetOutPath "$INSTDIR"
+
+  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net40\Common.Logging.Core.dll"' $0
+  DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net40\Common.Logging.Core.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.Core.dll" "$0"
+
+  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net40\Common.Logging.dll"' $0
+  DetailPrint "RetCode: $0"
+
+  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net40\Common.Logging.dll"
+  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.dll" "$0"
+SectionEnd
+!endif
 
 !endif
 
@@ -321,25 +370,46 @@ Section "un.Remove Npgsql.dll from GAC" UnNpgsql
   ; Npgsql.dll
   ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Npgsql.dll"
   
-  ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
-  DetailPrint "RetCode: $0"
+  ${If} $2 != ""
+    ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
 SectionEnd
 
+!ifdef COMMON_LOGGING
 Section "un.Remove Common.Logging from GAC" UnLoggingCommon
   ; Common.Logging.dll
   StrCpy $2 ""
   ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Common.Logging.dll"
 
-  ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
-  DetailPrint "RetCode: $0"
+  ${If} $2 != ""
+    ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
 
   ; Common.Logging.Core.dll
   StrCpy $2 ""
   ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Common.Logging.Core.dll"
 
-  ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
-  DetailPrint "RetCode: $0"
+  ${If} $2 != ""
+    ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
 SectionEnd
+!endif
+
+!ifdef MONO_SECURITY
+Section "un.Remove Mono.Security.dll from GAC" UnMonoSecurity
+  ; Mono.Security
+  StrCpy $2 ""
+  ReadRegStr $2 HKLM "SOFTWARE\${COM}\${APP}" "Mono.Security.dll"
+
+  ${If} $2 != ""
+    ExecWait '"$INSTDIR\GACRemove.exe" "$2"' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
+SectionEnd
+!endif
 
 Section "un.Remove Npgsql DbProviderFactory from machine.config" UnMachineConfig
   ${If} ${FileExists}                                            "$WINDIR\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
@@ -387,12 +457,14 @@ SectionEnd
 
   ;Language strings
   LangString DESC_SecNpgsql        ${LANG_ENGLISH} "Install Npgsql.dll into your GAC. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
+  LangString DESC_SecMonoSecurity  ${LANG_ENGLISH} "Install Mono.Security.dll (required by Npgsql.dll) into your GAC. "
   LangString DESC_SecCommonLogging ${LANG_ENGLISH} "Install Common.Logging (required by Npgsql.dll) into your GAC. "
   LangString DESC_SecMachineConfig ${LANG_ENGLISH} "Install Npgsql DbProviderFactory to machine.config. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
   LangString DESC_SecDdex2013      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2012/2013"
   LangString DESC_SecDdex2010      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2010"
 
   LangString DESC_UnNpgsql        ${LANG_ENGLISH} "Uninstall Npgsql.dll from your GAC."
+  LangString DESC_UnMonoSecurity  ${LANG_ENGLISH} "Uninstall Mono.Security.dll from your GAC."
   LangString DESC_UnCommonLogging ${LANG_ENGLISH} "Uninstall Common.Logging from your GAC."
   LangString DESC_UnMachineConfig ${LANG_ENGLISH} "Uninstall Npgsql DbProviderFactory from machine.config."
   LangString DESC_UnDdex2013      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2012/2013"
@@ -402,7 +474,12 @@ SectionEnd
   !insertmacro XPUI_FUNCTION_DESCRIPTION_BEGIN
   !ifdef NET40 || NET45
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecNpgsql}        $(DESC_SecNpgsql)
-    !insertmacro XPUI_DESCRIPTION_TEXT ${SecCommonLogging} $(DESC_SecCommonLogging)
+    !ifdef MONO_SECURITY
+      !insertmacro XPUI_DESCRIPTION_TEXT ${SecMonoSecurity}  $(DESC_SecMonoSecurity)
+    !endif
+    !ifdef COMMON_LOGGING
+      !insertmacro XPUI_DESCRIPTION_TEXT ${SecCommonLogging} $(DESC_SecCommonLogging)
+    !endif
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecMachineConfig} $(DESC_SecMachineConfig)
   !endif
   !ifdef DDEX2013
