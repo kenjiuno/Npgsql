@@ -33,7 +33,11 @@
 Name "${APP} ${VER}"
 
 ; The file to write
-OutFile "installer.exe" ; "Setup_${APP}-${VER}.exe"
+!ifdef OutFile
+  OutFile ${OutFile}
+!else
+  OutFile "installer.exe" ; "Setup_${APP}-${VER}.exe"
+!endif
 
 ; The default installation directory
 InstallDir "$PROGRAMFILES\${COM}\${APP}"
