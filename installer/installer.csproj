@@ -32,10 +32,11 @@
       <Output TaskParameter="Assemblies" ItemName="Npgsql" />
     </GetAssemblyIdentity>
     <!-- Modify "Value" attirbute to publish your own version -->
-    <CreateProperty Value="%(Npgsql.Version)">
+    <CreateProperty Value="%(Npgsql.Version)" Condition=" '$(SetupVersion)' == '' ">
       <Output TaskParameter="Value" PropertyName="SetupVersion" />
     </CreateProperty>
-    <Message Text="SetupVersion: $(SetupVersion), %(Npgsql.Version)" Importance="High" />
+    <!-- The MakeDir task creates a folder that is named by the OutputPath property, provided that no folder by that name currently exists. -->
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
     <!-- Build full(NET45,DDEX2013,DDEX2010) setup. for Vs2012/Vs2013 -->
     <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DMONO_SECURITY /DDDEX2010 /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
     <!-- Build partial(NET40,DDEX2010) setup. for Vs2010 -->
