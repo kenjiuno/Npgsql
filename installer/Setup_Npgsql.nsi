@@ -50,6 +50,8 @@ InstallDirRegKey HKLM "Software\${COM}\${APP}" "Install_Dir"
 RequestExecutionLevel admin
 
 !include "LogicLib.nsh"
+!include "WordFunc.nsh"
+!include "FileFunc.nsh"
 
 ; ExperienceUI
 ; http://nsis.sourceforge.net/ExperienceUI
@@ -118,11 +120,36 @@ Section ""
 SectionEnd
 !endif
 
+!ifdef MONO_SECURITY
+Section
+  SetOutPath "$INSTDIR\lib"
+  File /r             "..\lib\Mono.Security.dll"
+SectionEnd
+!endif
+
+!ifdef COMMON_LOGGING
+Section
+  SetOutPath "$INSTDIR\packages"
+  File /r             "..\packages\Common.Logging.dll"
+  File /r             "..\packages\Common.Logging.Core.dll"
+SectionEnd
+!endif
+
+Function LocateR0RetR1
+  ${WordFind} $R9 $R0 "*" $0
+  
+  ${If} $0 > 0
+    StrCpy $R1 $R9
+    StrCpy $0 "StopLocate"
+  ${EndIf}
+  Push $0
+FunctionEnd
+
 !ifdef NET45
 
 Section ""
   SetOutPath "$INSTDIR\Npgsql-${VER}-net45"
-  File /r             "..\Npgsql\bin\Release-net45\*.dll"
+  File /r             "..\Npgsql\bin\Release-net45\Npgsql.dll"
   File                "..\Npgsql.EntityFramework\bin\Release-net45\Npgsql.EntityFramework.dll"
   File                "..\Npgsql.EntityFramework\bin\Release-net45\Npgsql.EntityFramework.dll.config"
   File                "..\Npgsql.EntityFramework\bin\Legacy-Release-net45\Npgsql.EntityFrameworkLegacy.dll"
@@ -142,11 +169,17 @@ SectionEnd
 Section "Mono.Security.dll to GAC" SecMonoSecurity ; net45
   SetOutPath "$INSTDIR"
 
-  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Mono.Security.dll"' $0
-  DetailPrint "RetCode: $0"
+  StrCpy $R0 "4.0"
+  StrCpy $R1 ""
+  ${Locate} "$INSTDIR\lib" "/L=F /M=Mono.Security.dll /B=0" LocateR0RetR1
 
-  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Mono.Security.dll"
-  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Mono.Security.dll" "$0"
+  ${If} ${FileExists} $R1
+    ExecWait '"$INSTDIR\GACInstall.exe" "$R1"' $0
+    DetailPrint "RetCode: $0"
+
+    !insertmacro GetAssemblyName        "$R1"
+    WriteRegStr HKLM "SOFTWARE\${COM}\${APP}" "Mono.Security.dll" "$0"
+  ${EndIf}
 SectionEnd
 !endif
 
@@ -154,17 +187,27 @@ SectionEnd
 Section "Common.Logging to GAC" SecCommonLogging ; net45
   SetOutPath "$INSTDIR"
 
-  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.Core.dll"' $0
-  DetailPrint "RetCode: $0"
+  StrCpy $R0 "net40"
+  StrCpy $R1 ""
+  ${Locate} "$INSTDIR\packages" "/L=F /M=Common.Logging.Core.dll /B=1" LocateR0RetR1
+  ${If} ${FileExists} $R1
+    ExecWait '"$INSTDIR\GACInstall.exe" "$R1"' $0
+    DetailPrint "RetCode: $0"
 
-  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.Core.dll"
-  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.Core.dll" "$0"
+    !insertmacro GetAssemblyName        "$R1"
+    WriteRegStr HKLM "SOFTWARE\${COM}\${APP}" "Common.Logging.Core.dll" "$0"
+  ${EndIf}
 
-  ExecWait '"$INSTDIR\GACInstall.exe" "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.dll"' $0
-  DetailPrint "RetCode: $0"
+  StrCpy $R0 "net40"
+  StrCpy $R1 ""
+  ${Locate} "$INSTDIR\packages" "/L=F /M=Common.Logging.dll /B=1" LocateR0RetR1
+  ${If} ${FileExists} $R1
+    ExecWait '"$INSTDIR\GACInstall.exe" "$R1"' $0
+    DetailPrint "RetCode: $0"
 
-  !insertmacro GetAssemblyName        "$INSTDIR\Npgsql-${VER}-net45\Common.Logging.dll"
-  WriteRegStr HKLM "SOFTWARE\${COM}\${APP}"                        "Common.Logging.dll" "$0"
+    !insertmacro GetAssemblyName        "$R1"
+    WriteRegStr HKLM "SOFTWARE\${COM}\${APP}" "Common.Logging.dll" "$0"
+  ${EndIf}
 SectionEnd
 !endif
 
@@ -172,7 +215,7 @@ SectionEnd
 
 Section ""
   SetOutPath "$INSTDIR\Npgsql-${VER}-net40"
-  File /r             "..\Npgsql\bin\Release-net40\*.dll"
+  File /r             "..\Npgsql\bin\Release-net40\Npgsql.dll"
   File                "..\Npgsql.EntityFramework\bin\Release-net40\Npgsql.EntityFramework.dll"
   File                "..\Npgsql.EntityFramework\bin\Release-net40\Npgsql.EntityFramework.dll.config"
   File                "..\Npgsql.EntityFramework\bin\Legacy-Release-net40\Npgsql.EntityFrameworkLegacy.dll"
