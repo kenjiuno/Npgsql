@@ -211,7 +211,8 @@ Section "Common.Logging to GAC" SecCommonLogging ; net45
 SectionEnd
 !endif
 
-!else ifdef NET40
+!endif
+!ifdef NET40
 
 Section ""
   SetOutPath "$INSTDIR\Npgsql-${VER}-net40"
@@ -484,6 +485,7 @@ Section "un."
   Delete "$INSTDIR\Npgsql-${VER}-net45\NpgsqlDdexProvider.vsix"
   RMDir  "$INSTDIR\Npgsql-${VER}-net45"
 
+  Delete "$INSTDIR\Npgsql-${VER}-net40\*.dll"
   Delete "$INSTDIR\Npgsql-${VER}-net40\NpgsqlDdexProvider.vsix"
   RMDir  "$INSTDIR\Npgsql-${VER}-net40"
 

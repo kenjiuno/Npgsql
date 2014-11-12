@@ -9,7 +9,6 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9583D8F8-22CB-4F0D-9088-616BE4906F66}</ProjectGuid>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' ">
     <OutputPath>bin\Release-net45</OutputPath>
@@ -23,7 +22,8 @@
   </ItemGroup>
   <Target Name="Build">
     <!-- Call internal MSBuild to prepare NpgsqlDdexProvider2010 binary. for Vs2010/2012/2013 -->
-    <MSBuild Projects="..\NpgsqlDdexProvider\NpgsqlDdexProvider2010.csproj" Properties="Configuration=Release-net40" Targets="Build" />
+    <MSBuild Projects="..\NpgsqlDdexProvider\NpgsqlDdexProvider2010.csproj" Properties="Configuration=Release-net40" Targets="Build" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
+
     <!-- Detect assembly version -->
     <GetAssemblyIdentity AssemblyFiles="..\Npgsql\bin\Release-net45\Npgsql.dll" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' ">
       <Output TaskParameter="Assemblies" ItemName="Npgsql" />
@@ -31,18 +31,31 @@
     <GetAssemblyIdentity AssemblyFiles="..\Npgsql\bin\Release-net40\Npgsql.dll" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' ">
       <Output TaskParameter="Assemblies" ItemName="Npgsql" />
     </GetAssemblyIdentity>
-    <!-- Modify "Value" attirbute to publish your own version -->
+
+    <!-- Define "SetupVersion" property if you want to publish your own version -->
     <CreateProperty Value="%(Npgsql.Version)" Condition=" '$(SetupVersion)' == '' ">
       <Output TaskParameter="Value" PropertyName="SetupVersion" />
     </CreateProperty>
-    <!-- The MakeDir task creates a folder that is named by the OutputPath property, provided that no folder by that name currently exists. -->
+
+    <!-- Define "NFxVersion" -->
+    <CreateProperty Value="net45" Condition=" '$(Configuration)' == 'Release-net45' ">
+      <Output TaskParameter="Value" PropertyName="NFxVersion" />
+    </CreateProperty>
+    <CreateProperty Value="net40" Condition=" '$(Configuration)' == 'Release-net40' ">
+      <Output TaskParameter="Value" PropertyName="NFxVersion" />
+    </CreateProperty>
+
+    <!-- VisualStudio always prepares OutputPath, but MSBuild doesn't do such a thing. -->
     <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
-    <!-- Build full(NET45,DDEX2013,DDEX2010) setup. for Vs2012/Vs2013 -->
-    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DMONO_SECURITY /DDDEX2010 /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
-    <!-- Build partial(NET40,DDEX2010) setup. for Vs2010 -->
-    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET40 /DDDEX2010 /DMONO_SECURITY            /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
+
+    <!-- Build (.NET45,DDEX2013) setup, if Release-net45 -->
+    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DMONO_SECURITY /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
+
+    <!-- Build (.NET40,DDEX2010) setup, if Release-net40 -->
+    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET40 /DDDEX2010 /DMONO_SECURITY /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
+
     <!-- Copy installer.exe to Setup_Npgsql_x.y.z.w.exe -->
-    <Copy SourceFiles="$(OutputPath)\installer.exe" DestinationFiles="$(OutputPath)\Setup_Npgsql-$(SetupVersion).exe" />
+    <Copy SourceFiles="$(OutputPath)\installer.exe" DestinationFiles="$(OutputPath)\Setup_Npgsql-$(SetupVersion)-$(NFxVersion).exe" />
   </Target>
   <Target Name="Clean">
     <MSBuild Projects="..\NpgsqlDdexProvider\NpgsqlDdexProvider2010.csproj" Properties="Configuration=Release-net40" Targets="Clean" />
