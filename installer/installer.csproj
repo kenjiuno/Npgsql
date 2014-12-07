@@ -40,9 +40,9 @@
     <!-- The MakeDir task creates a folder that is named by the OutputPath property, provided that no folder by that name currently exists. -->
     <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
     <!-- Build full(NET45,DDEX2013,DDEX2012) setup. for Vs2012/Vs2013 -->
-    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DDDEX2012 /DCOMMON_LOGGING /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
+    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET45 /DDDEX2013 /DDDEX2012 /DMONO_SECURITY /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net45|AnyCPU' " />
     <!-- Build partial(NET40,DDEX2010) setup. for Vs2010 -->
-    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET40 /DDDEX2010            /DCOMMON_LOGGING /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
+    <Exec Command="&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /DNET40 /DDDEX2010            /DMONO_SECURITY /DOutFile=$(OutputPath)\installer.exe /DVER=$(SetupVersion) Setup_Npgsql.nsi" Condition=" '$(Configuration)|$(Platform)' == 'Release-net40|AnyCPU' " />
     <!-- Copy installer.exe to Setup_Npgsql_x.y.z.w.exe -->
     <Copy SourceFiles="$(OutputPath)\installer.exe" DestinationFiles="$(OutputPath)\Setup_Npgsql-$(SetupVersion).exe" />
   </Target>
