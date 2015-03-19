@@ -20,6 +20,7 @@
 ; !define DDEX2010
 ; !define DDEX2012
 ; !define DDEX2013
+; !define DDEX2015
 
 !define APP "Npgsql"
 !define COM "The Npgsql Development Team"
@@ -106,6 +107,13 @@ Section ""
   File /x "*.vshost.*" "tools\PrintAssemblyName.*"
 
 SectionEnd
+
+!ifdef DDEX2015
+Section ""
+  SetOutPath "$INSTDIR\Npgsql-${VER}-net45-vs2015"
+  File                "..\NpgsqlDdexProvider\bin\Release-net45-vs2015\NpgsqlDdexProvider.vsix" ;Vs2013
+SectionEnd
+!endif
 
 !ifdef DDEX2013
 Section ""
@@ -334,6 +342,26 @@ SectionEnd
 
 !endif
 
+!ifdef DDEX2015
+
+Section "NpgsqlDdexProvider(Vs2015)" SecDdex2015
+  SetOutPath "$INSTDIR"
+
+  StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+
+  ${If} ${FileExists} $1
+    ExecWait '"$1" "$INSTDIR\Npgsql-${VER}-net45-vs2015\NpgsqlDdexProvider.vsix"' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
+SectionEnd
+
+!endif
+
 !ifdef DDEX2013
 
 Section "NpgsqlDdexProvider(Vs2013)" SecDdex2013
@@ -413,6 +441,24 @@ SectionEnd
 
 ;--------------------------------
 ;Uninstaller Section
+
+!ifdef DDEX2015
+
+Section "un.Remove NpgsqlDdexProvider(Vs2015)" UnDdex2015
+  StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+
+  ${If} ${FileExists} $1
+    ExecWait '"$1" /u:958b9481-2712-4670-9a62-8fe65e5beea7' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
+SectionEnd
+
+!endif
 
 !ifdef DDEX2013
 
@@ -548,7 +594,15 @@ Section "un."
   Delete "$INSTDIR\PrintAssemblyName.*"
 
   Delete "$INSTDIR\Npgsql-${VER}-net45\*.dll"
+  Delete "$INSTDIR\Npgsql-${VER}-net45\*.dll.config"
   RMDir  "$INSTDIR\Npgsql-${VER}-net45"
+
+  Delete "$INSTDIR\Npgsql-${VER}-net40\*.dll"
+  Delete "$INSTDIR\Npgsql-${VER}-net40\*.dll.config"
+  RMDir  "$INSTDIR\Npgsql-${VER}-net40"
+
+  Delete "$INSTDIR\Npgsql-${VER}-net45-vs2015\NpgsqlDdexProvider.vsix"
+  RMDir  "$INSTDIR\Npgsql-${VER}-net45-vs2015"
 
   Delete "$INSTDIR\Npgsql-${VER}-net45-vs2013\NpgsqlDdexProvider.vsix"
   RMDir  "$INSTDIR\Npgsql-${VER}-net45-vs2013"
@@ -580,6 +634,7 @@ SectionEnd
   LangString DESC_SecMonoSecurity  ${LANG_ENGLISH} "Install Mono.Security.dll (required by Npgsql.dll) into your GAC. "
   LangString DESC_SecCommonLogging ${LANG_ENGLISH} "Install Common.Logging (required by Npgsql.dll) into your GAC. "
   LangString DESC_SecMachineConfig ${LANG_ENGLISH} "Install Npgsql DbProviderFactory to machine.config. $\nIt is useful for example: $\n- Npgsql DDEX provider for Visual Studio $\n- Microsoft Power Query for Excel"
+  LangString DESC_SecDdex2015      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2015"
   LangString DESC_SecDdex2013      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2013"
   LangString DESC_SecDdex2012      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2012"
   LangString DESC_SecDdex2010      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2010"
@@ -588,6 +643,7 @@ SectionEnd
   LangString DESC_UnMonoSecurity  ${LANG_ENGLISH} "Uninstall Mono.Security.dll from your GAC."
   LangString DESC_UnCommonLogging ${LANG_ENGLISH} "Uninstall Common.Logging from your GAC."
   LangString DESC_UnMachineConfig ${LANG_ENGLISH} "Uninstall Npgsql DbProviderFactory from machine.config."
+  LangString DESC_UnDdex2015      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2015"
   LangString DESC_UnDdex2013      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2013"
   LangString DESC_UnDdex2012      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2012"
   LangString DESC_UnDdex2010      ${LANG_ENGLISH} "Uninstall Npgsql DDEX provider for Visual Studio 2010"
@@ -604,6 +660,9 @@ SectionEnd
       !insertmacro XPUI_DESCRIPTION_TEXT ${SecCommonLogging} $(DESC_SecCommonLogging)
     !endif
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecMachineConfig} $(DESC_SecMachineConfig)
+  !endif
+  !ifdef DDEX2015
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2015}      $(DESC_SecDdex2015)
   !endif
   !ifdef DDEX2013
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2013}      $(DESC_SecDdex2013)
