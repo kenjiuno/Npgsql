@@ -388,8 +388,15 @@ namespace Npgsql
                 parameter.SourceColumn = "";
             }
             else
-
-                parameter.NpgsqlDbType = NpgsqlTypesHelper.GetNativeTypeInfo((Type)row[SchemaTableColumn.DataType]).NpgsqlDbType;
+            {
+                NpgsqlBackendTypeInfo typeInfo;
+                if (NpgsqlTypesHelper.TryGetBackendTypeInfo((String)row[SchemaTableColumn.ProviderType], out typeInfo)) {
+                    parameter.NpgsqlDbType = typeInfo.NpgsqlDbType;
+                }
+                else {
+                    parameter.NpgsqlDbType = NpgsqlTypesHelper.GetNativeTypeInfo((Type)row[SchemaTableColumn.DataType]).NpgsqlDbType;
+                }
+            }
 
         }
 

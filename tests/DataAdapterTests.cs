@@ -135,7 +135,7 @@ namespace NpgsqlTests
             da.Fill(ds);
 
             //## Insert a new row with id = 1
-            ds.Tables[0].Rows.Add(new Object[] {0.4, 0.5});
+            ds.Tables[0].Rows.Add(new Object[] { 0.4, 0.5 });
             da.Update(ds);
 
             //## change id from 1 to 2
@@ -454,6 +454,51 @@ namespace NpgsqlTests
             var quoted = cb.QuoteIdentifier(orig);
             Assert.That(quoted, Is.EqualTo("\"some\"\"column\""));
             Assert.That(cb.UnquoteIdentifier(quoted), Is.EqualTo(orig));
+        }
+
+        [Test]
+        [IssueLink("https://github.com/npgsql/npgsql/issues/549")]
+        public void TestCharParameterCompare()
+        {
+            using (var c = new NpgsqlConnection(ConnectionString))
+            {
+                var cmd = c.CreateCommand();
+                cmd.CommandText = "select field_char5,field_pk from data";
+
+                NpgsqlDataAdapter da = new NpgsqlDataAdapter(cmd);
+
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+
+                NpgsqlCommandBuilder cb = new NpgsqlCommandBuilder(da);
+
+                da.InsertCommand = c.CreateCommand();
+                da.InsertCommand.CommandText = "insert into data(field_char5) values (:a) returning field_pk";
+
+                da.InsertCommand.Parameters.Add(new NpgsqlParameter("a", NpgsqlDbType.Char, 5));
+                da.InsertCommand.Parameters.Add(new NpgsqlParameter("b", DbType.Int32));
+
+                da.InsertCommand.Parameters[0].Direction = ParameterDirection.Input;
+                da.InsertCommand.Parameters[1].Direction = ParameterDirection.ReturnValue;
+
+                da.InsertCommand.Parameters[0].SourceColumn = "field_char5";
+                da.InsertCommand.Parameters[1].SourceColumn = "field_pk";
+
+                da.UpdateCommand = cb.GetUpdateCommand();
+                da.DeleteCommand = cb.GetDeleteCommand();
+
+                DataRow dr = dt.Rows.Add("123");
+
+                da.Update(dt); // do insert
+
+                dr[0] = "abc";
+
+                da.Update(dt); // do update
+
+                dr.Delete();
+
+                da.Update(dt); // do delete
+            }
         }
     }
     /*
