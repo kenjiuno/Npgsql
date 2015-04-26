@@ -390,11 +390,18 @@ namespace Npgsql
             else
             {
                 NpgsqlBackendTypeInfo typeInfo;
-                if (NpgsqlTypesHelper.TryGetBackendTypeInfo((String)row[SchemaTableColumn.ProviderType], out typeInfo)) {
+                if (row[SchemaTableColumn.ProviderType] != null
+                    && NpgsqlTypesHelper.TryGetBackendTypeInfo((String)row[SchemaTableColumn.ProviderType], out typeInfo)
+                ) {
                     parameter.NpgsqlDbType = typeInfo.NpgsqlDbType;
                 }
                 else {
                     parameter.NpgsqlDbType = NpgsqlTypesHelper.GetNativeTypeInfo((Type)row[SchemaTableColumn.DataType]).NpgsqlDbType;
+                }
+
+                if (row[SchemaTableColumn.ColumnSize] is int)
+                {
+                    parameter.Size = (int)row[SchemaTableColumn.ColumnSize];
                 }
             }
 
