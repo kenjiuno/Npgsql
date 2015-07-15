@@ -100,11 +100,16 @@
       <HintPath>..\..\packages\VSSDK.Shell.Interop.9.9.0.4\lib\net20\Microsoft.VisualStudio.Shell.Interop.9.0.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheckNpgsqlStatus.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="NpgsqlDataProviderRegistration.cs" />
     <Compile Include="NpgsqlProviderObjectFactory.cs" />
+    <Compile Include="PkgCmdIDList.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -141,10 +146,21 @@
   <ItemGroup>
     <EmbeddedResource Include="NpgsqlDataObjectSupport.xml" />
     <EmbeddedResource Include="NpgsqlDataViewSupport.xml" />
+    <Resource Include="Resources\Images.png" />
     <Content Include="Resources\Package.ico" />
+    <VSCTCompile Include="NpgsqlDdexProvider.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
+    </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Npgsql\Npgsql.csproj">
+      <Project>{9d13b739-62b1-4190-b386-7a9547304eb3}</Project>
+      <Name>Npgsql</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
