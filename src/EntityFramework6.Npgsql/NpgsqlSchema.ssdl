@@ -375,6 +375,7 @@
           where r.relkind = 'r') ss
         on a.attrelid = ss.roid and a.attnum = (ss.x).x and not a.attisdropped and rrelnamespace in
         (select oid from pg_namespace where nspname not in ('pg_catalog','information_schema'))
+        order by constraint_id, ordinal
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewConstraintColumns" EntityType="NpgsqlSchema.ViewConstraintColumn">
