@@ -342,6 +342,39 @@ SectionEnd
 
 !endif
 
+!ifdef DDEX2015 | DDEX2013 | DDEX2012 | DDEX2010
+
+Section "Remove all NpgsqlDdexProvider at first" SecUninstDdex
+  StrCpy $1 "$INSTDIR\VSIXInstaller.exe"
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\12.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\11.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+  ${IfNot} ${FileExists} $1
+    StrCpy $0 ""
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0" "InstallDir"
+    StrCpy $1 "$0VSIXInstaller.exe"
+  ${EndIf}
+
+  ${If} ${FileExists} $1
+    ExecWait '"$1" /u:958b9481-2712-4670-9a62-8fe65e5beea7' $0
+    DetailPrint "RetCode: $0"
+  ${EndIf}
+SectionEnd
+
+!endif
+
 !ifdef DDEX2015
 
 Section "NpgsqlDdexProvider(Vs2015)" SecDdex2015
@@ -638,6 +671,7 @@ SectionEnd
   LangString DESC_SecDdex2013      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2013"
   LangString DESC_SecDdex2012      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2012"
   LangString DESC_SecDdex2010      ${LANG_ENGLISH} "Install Npgsql DDEX provider for Visual Studio 2010"
+  LangString DESC_SecUninstDdex    ${LANG_ENGLISH} "unInstall all Npgsql DDEX provider at first"
 
   LangString DESC_UnNpgsql        ${LANG_ENGLISH} "Uninstall Npgsql.dll from your GAC."
   LangString DESC_UnMonoSecurity  ${LANG_ENGLISH} "Uninstall Mono.Security.dll from your GAC."
@@ -660,6 +694,9 @@ SectionEnd
       !insertmacro XPUI_DESCRIPTION_TEXT ${SecCommonLogging} $(DESC_SecCommonLogging)
     !endif
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecMachineConfig} $(DESC_SecMachineConfig)
+  !endif
+  !ifdef DDEX2015 | DDEX2013 | DDEX2012 | DDEX2010
+    !insertmacro XPUI_DESCRIPTION_TEXT ${SecUninstDdex}      $(DESC_SecUninstDdex)
   !endif
   !ifdef DDEX2015
     !insertmacro XPUI_DESCRIPTION_TEXT ${SecDdex2015}      $(DESC_SecDdex2015)
