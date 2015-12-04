@@ -9,13 +9,13 @@
         table_catalog as catalog_name,
         table_schema as schema_name
         from information_schema.tables
-        where table_type in ('BASE TABLE') and table_schema not in ('pg_catalog','information_schema');
+        where table_type in ('BASE TABLE') and table_schema not in ('pg_catalog','information_schema')
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgTableColumns" EntityType="NpgsqlSchema.TableColumn">
       <DefiningQuery>
         select
-        c.table_catalog||'.'||c.table_schema||'.'||c.table_name||'.'||c.ordinal_position as id,
+        c.table_catalog||'.'||c.table_schema||'.'||c.table_name||'.'||c.column_name as id,
         c.table_catalog||'.'||c.table_schema||'.'||c.table_name as table_id,
         column_name as name,
         ordinal_position as ordinal,
@@ -44,7 +44,7 @@
               u.table_name = c.table_name and
               u.column_name = c.column_name)
           when 1 then true
-          when 0 then false
+          else false
         end as is_identity,
         false as is_generated,
         column_default as default_value
@@ -54,7 +54,7 @@
              c.table_schema = t.table_schema and
              c.table_name = t.table_name
         where c.table_schema not in ('pg_catalog','information_schema') and
-              t.table_type = 'BASE TABLE';
+              t.table_type = 'BASE TABLE'
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgConstraints" EntityType="NpgsqlSchema.Constraint">
@@ -93,7 +93,7 @@
           on t.constraint_catalog = r.constraint_catalog and
              t.constraint_schema = r.constraint_schema and
              t.constraint_name = r.constraint_name 
-        where t.table_schema not in ('pg_catalog','information_schema');
+        where t.table_schema not in ('pg_catalog','information_schema')
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgForeignKeyColumns" EntityType="NpgsqlSchema.ForeignKeyColumn">
@@ -109,11 +109,10 @@
           on r.constraint_catalog = fk.constraint_catalog and
              r.constraint_schema = fk.constraint_schema and
              r.constraint_name = fk.constraint_name)
-        left join information_schema.constraint_column_usage as pk
+        left join information_schema.key_column_usage as pk
           on r.unique_constraint_catalog = pk.constraint_catalog and
              r.unique_constraint_schema = pk.constraint_schema and
              r.unique_constraint_name = pk.constraint_name
-        ;
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViews" EntityType="NpgsqlSchema.View">
@@ -126,7 +125,7 @@
         false as is_updatable,
         view_definition as definition
         from information_schema.views
-        where table_schema not in ('pg_catalog','information_schema');
+        where table_schema not in ('pg_catalog','information_schema')
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewColumns" EntityType="NpgsqlSchema.ViewColumn">
@@ -171,7 +170,7 @@
              c.table_schema = t.table_schema and
              c.table_name = t.table_name
         where c.table_schema not in ('pg_catalog','information_schema') and
-              t.table_type = 'VIEW';
+              t.table_type = 'VIEW'
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewConstraints" EntityType="NpgsqlSchema.ViewConstraint">
@@ -211,7 +210,7 @@
         false as is_aggregate
         from information_schema.routines as r
         where data_type != 'void' and 
-              routine_schema not in ('pg_catalog','information_schema');
+              routine_schema not in ('pg_catalog','information_schema')
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgFunctionParameters" EntityType="NpgsqlSchema.FunctionParameter">
@@ -245,7 +244,6 @@
              p.specific_name = r.specific_name
         where p.specific_schema not in ('pg_catalog','information_schema') and
               r.data_type != 'void'
-        ;
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgProcedures" EntityType="NpgsqlSchema.Procedure">
@@ -260,14 +258,14 @@
         false as is_aggregate
         from information_schema.routines as r
         where data_type = 'void' and 
-              routine_schema not in ('pg_catalog','information_schema');
+              routine_schema not in ('pg_catalog','information_schema')
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgProcedureParameters" EntityType="NpgsqlSchema.ProcedureParameter">
       <DefiningQuery>
         select
         p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name||'.'||p.ordinal_position as id,
-        p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name as function_id,
+        p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name as procedure_id,
         coalesce(p.parameter_name, 'x') as name,
         p.ordinal_position as ordinal,
         p.udt_name as type_name,
@@ -294,22 +292,16 @@
              p.specific_name = r.specific_name
         where p.specific_schema not in ('pg_catalog','information_schema') and
               r.data_type = 'void'
-        ;
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgConstraintColumns" EntityType="NpgsqlSchema.ConstraintColumn">
       <DefiningQuery>
         select
-        u.table_catalog||'.'||u.table_schema||'.'||u.table_name||'.'||u.column_name as column_id,
-        cc.constraint_catalog||'.'||cc.constraint_schema||'.'||cc.constraint_name as constraint_id,
-        u.ordinal_position as ordinal
-        from information_schema.constraint_column_usage as cc
-        left join information_schema.key_column_usage as u
-          on cc.constraint_catalog = u.constraint_catalog and
-             cc.constraint_schema = u.constraint_schema and
-             cc.constraint_name = u.constraint_name and
-             cc.column_name = u.column_name
-        where cc.table_schema not in ('pg_catalog','information_schema');
+        table_catalog||'.'||table_schema||'.'||table_name||'.'||column_name as column_id,
+        constraint_catalog||'.'||constraint_schema||'.'||constraint_name as constraint_id,
+        ordinal_position as ordinal
+        from information_schema.key_column_usage as u
+        where table_schema not in ('pg_catalog','information_schema')
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewConstraintColumns" EntityType="NpgsqlSchema.ViewConstraintColumn">
