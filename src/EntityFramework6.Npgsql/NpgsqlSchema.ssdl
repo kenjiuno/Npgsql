@@ -3,46 +3,33 @@
   <EntityContainer Name="NpgsqlSchema">
     <EntitySet Name="PgTables" EntityType="NpgsqlSchema.Table">
       <DefiningQuery>
-        select
-        cast(c.oid as varchar) as id,
-        c.relname AS name,
-        current_database() as catalog_name,
-        n.nspname AS schema_name
-        from pg_class c
-          left join pg_namespace n
-          on n.oid = c.relnamespace
-        where c.relkind = 'r' and n.nspname not in ('pg_catalog','information_schema')
+        select 
+        table_catalog||'.'||table_schema||'.'||table_name as id,
+        table_name as name,
+        table_catalog as catalog_name,
+        table_schema as schema_name
+        from information_schema.tables
+        where table_type in ('BASE TABLE') and table_schema not in ('pg_catalog','information_schema');
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgTableColumns" EntityType="NpgsqlSchema.TableColumn">
       <DefiningQuery>
         select
-        cast(a.attrelid as varchar) || '.' || cast (a.attnum as varchar) as id,
-        cast(c.oid as varchar) as table_id,
-        a.attname as name,
-        a.attnum as ordinal,
-        not a.attnotnull as is_nullable,
-        t.typname as type_name,
-        case
-          when t.typname in ('bpchar', 'varchar') and a.atttypmod != -1 then a.atttypmod - 4
-          when t.typname in ('bit', 'varbit') and a.atttypmod != -1 then a.atttypmod
-          else null
-        end as max_length,
-        case
-          when t.typname = 'numeric' and a.atttypmod != -1 then ((a.atttypmod - 4) >> 16) &amp; 65535
-          else null
-        end as precision,
-        case
-          when t.typname in ('time', 'timestamp', 'timestamptz') and a.atttypmod != -1 then a.atttypmod
-          when t.typname = 'interval' and a.atttypmod &amp; 65535 != 65535 then a.atttypmod &amp; 65535
-          else null
-        end as datetime_precision,
-        case
-          when t.typname = 'numeric' and a.atttypmod != -1 then (a.atttypmod - 4) &amp; 65535
-          else null
-        end as scale,
-        case
-          when t.typlen = -1 and t.typelem != 0 then true
+        c.table_catalog||'.'||c.table_schema||'.'||c.table_name||'.'||c.ordinal_position as id,
+        c.table_catalog||'.'||c.table_schema||'.'||c.table_name as table_id,
+        column_name as name,
+        ordinal_position as ordinal,
+        case is_nullable
+          when 'YES' then true 
+          when 'NO' then false
+        end as is_nullable,
+        udt_name as type_name,
+        character_maximum_length as max_length,
+        numeric_precision as precision,
+        datetime_precision as datetime_precision,
+        numeric_scale as scale,
+        case data_type
+          when 'ARRAY' then true
           else false
         end as is_multiset,
         null as collation_catalog_name,
@@ -51,119 +38,115 @@
         null as char_set_catalog_name,
         null as char_set_schema_name,
         null as char_set_name,
-        case
-          when pg_get_expr(ad.adbin, ad.adrelid) like 'nextval%' then true
-          else false
+        case (select count(column_name) from information_schema.key_column_usage as u
+              where u.table_catalog = c.table_catalog and
+              u.table_schema = c.table_schema and
+              u.table_name = c.table_name and
+              u.column_name = c.column_name)
+          when 1 then true
+          when 0 then false
         end as is_identity,
         false as is_generated,
--- default value column
-        ad.adsrc as default_value
-        from pg_attribute a
-          join pg_class c
-          on a.attrelid = c.oid
-          join pg_type t
-          on a.atttypid = t.oid
-          left join pg_attrdef ad
-          on a.attrelid = ad.adrelid and a.attnum = ad.adnum
-        where t.typtype = 'b' and c.relkind = 'r' and a.attnum >= 0 and c.relnamespace in
-        (select oid from pg_namespace where nspname not in ('pg_catalog','information_schema'))
+        column_default as default_value
+        from information_schema.columns as c
+        inner join information_schema.tables as t
+          on c.table_catalog = t.table_catalog and
+             c.table_schema = t.table_schema and
+             c.table_name = t.table_name
+        where c.table_schema not in ('pg_catalog','information_schema') and
+              t.table_type = 'BASE TABLE';
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgConstraints" EntityType="NpgsqlSchema.Constraint">
       <DefiningQuery>
         select
-        cast(c.oid as varchar) as id,
-        cast(c.conrelid as varchar) as table_id,
-        c.conname as name,
-        c.condeferrable as is_deferrable,
-        c.condeferred as is_initially_deferred,
-        c.contype as constraint_type,
-        c.consrc as expression,
-        case c.confupdtype
-          when 'c' then 'CASCADE'
-          when 'n' then 'SET NULL'
-          when 'd' then 'SET DEFAULT'
-          when 'r' then 'RESTRICT'
-          when 'a' then 'NO ACTION'
-          else NULL
-        end AS update_rule,
-        case c.confdeltype
-          when 'c' then 'CASCADE'
-          when 'n' then 'SET NULL'
-          when 'd' then 'SET DEFAULT'
-          when 'r' then 'RESTRICT'
-          when 'a' then 'NO ACTION'
-          else NULL
-        end AS delete_rule
-        from pg_constraint c
+        t.constraint_catalog||'.'||t.constraint_schema||'.'||t.constraint_name as id,
+        t.table_catalog||'.'||t.table_schema||'.'||t.table_name as table_id,
+        t.constraint_name as name,
+        case t.is_deferrable
+          when 'YES' then true
+          when 'NO' then false
+        end as is_deferrable,
+        case t.initially_deferred
+          when 'YES' then true
+          when 'NO' then false
+        end as is_initially_deferred,
+        case t.constraint_type
+          when 'CHECK' then 'c'
+          when 'FOREIGN KEY' then 'f'
+          when 'PRIMARY KEY' then 'p'
+          when 'UNIQUE' then 'u'
+        end as constraint_type,
+        cc.check_clause as expression,
+        r.update_rule as update_rule,
+        r.delete_rule as delete_rule
+        from ((information_schema.table_constraints as t 
+        left join information_schema.constraint_column_usage as u
+          on t.constraint_catalog = u.constraint_catalog and
+             t.constraint_schema = u.constraint_schema and
+             t.constraint_name = u.constraint_name) 
+        left join information_schema.check_constraints as cc 
+          on t.constraint_catalog = cc.constraint_catalog and
+             t.constraint_schema = cc.constraint_schema and
+             t.constraint_name = cc.constraint_name )
+        left join information_schema.referential_constraints as r
+          on t.constraint_catalog = r.constraint_catalog and
+             t.constraint_schema = r.constraint_schema and
+             t.constraint_name = r.constraint_name 
+        where t.table_schema not in ('pg_catalog','information_schema');
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgForeignKeyColumns" EntityType="NpgsqlSchema.ForeignKeyColumn">
       <DefiningQuery>
         select
-        cast(c.oid as varchar) || '.' || cast((c.confkey).n as varchar) as id,
-        (c.confkey).n as ordinal,
-        cast(pkc.attrelid as varchar) || '.' || cast (pkc.attnum as varchar) as from_columnid,
-        cast(fkc.attrelid as varchar) || '.' || cast (fkc.attnum as varchar) as to_columnid,
-        cast(c.oid as varchar) as constraint_id
-        from (select c.oid,
-        c.conname,
-        c.conrelid,
-        information_schema._pg_expandarray(c.conkey) as conkey,
-        c.confrelid,
-        information_schema._pg_expandarray(c.confkey) as confkey
-        from pg_constraint c
-        where contype = 'f') c
-        join pg_class pt on pt.oid = c.conrelid
-        join pg_class ft on ft.oid = c.confrelid
-        join pg_attribute pkc on pkc.attrelid = c.conrelid and pkc.attnum = (c.conkey).x
-        join pg_attribute fkc on fkc.attrelid = c.confrelid and fkc.attnum = (c.confkey).x
+        r.constraint_catalog||'.'||r.constraint_schema||'.'||r.constraint_name as id,
+        fk.ordinal_position as ordinal,
+        pk.table_catalog||'.'||pk.table_schema||'.'||pk.table_name||'.'||pk.column_name as from_columnid,
+        fk.table_catalog||'.'||fk.table_schema||'.'||fk.table_name||'.'||fk.column_name as to_columnid,
+        r.constraint_catalog||'.'||r.constraint_schema||'.'||r.constraint_name as constraint_id
+        from (information_schema.referential_constraints as r
+        left join information_schema.key_column_usage as fk
+          on r.constraint_catalog = fk.constraint_catalog and
+             r.constraint_schema = fk.constraint_schema and
+             r.constraint_name = fk.constraint_name)
+        left join information_schema.constraint_column_usage as pk
+          on r.unique_constraint_catalog = pk.constraint_catalog and
+             r.unique_constraint_schema = pk.constraint_schema and
+             r.unique_constraint_name = pk.constraint_name
+        ;
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViews" EntityType="NpgsqlSchema.View">
       <DefiningQuery>
         select
-        cast(c.oid as varchar) as id,
-        c.relname AS name,
-        current_database() as catalog_name,
-        n.nspname AS schema_name,
+        table_catalog||'.'||table_schema||'.'||table_name as id,
+        table_name as name,
+        table_catalog as catalog_name,
+        table_schema as schema_name,
         false as is_updatable,
-        pg_get_viewdef(c.oid) AS definition
-        from pg_class c
-          left join pg_namespace n
-          on n.oid = c.relnamespace
-        where c.relkind = 'v' and n.nspname not in ('pg_catalog','information_schema')
+        view_definition as definition
+        from information_schema.views
+        where table_schema not in ('pg_catalog','information_schema');
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewColumns" EntityType="NpgsqlSchema.ViewColumn">
       <DefiningQuery>
         select
-        cast(a.attrelid as varchar) || '.' || cast (a.attnum as varchar) as id,
-        cast(c.oid as varchar) as view_id,
-        a.attname as name,
-        a.attnum as ordinal,
-        not a.attnotnull as is_nullable,
-        t.typname as type_name,
-        case
-          when t.typname in ('bpchar', 'varchar') and a.atttypmod != -1 then a.atttypmod - 4
-          when t.typname in ('bit', 'varbit') and a.atttypmod != -1 then a.atttypmod
-          else null
-        end as max_length,
-        case
-          when t.typname = 'numeric' and a.atttypmod != -1 then ((a.atttypmod - 4) >> 16) &amp; 65535
-          else null
-        end as precision,
-        case
-          when t.typname in ('time', 'timestamp', 'timestamptz') and a.atttypmod != -1 then a.atttypmod
-          when t.typname = 'interval' and a.atttypmod &amp; 65535 != 65535 then a.atttypmod &amp; 65535
-          else null
-        end as datetime_precision,
-        case
-          when t.typname = 'numeric' and a.atttypmod != -1 then (a.atttypmod - 4) &amp; 65535
-          else null
-        end as scale,
-        case
-          when t.typlen = -1 and t.typelem != 0 then true
+        c.table_catalog||'.'||c.table_schema||'.'||c.table_name||'.'||c.ordinal_position as id,
+        c.table_catalog||'.'||c.table_schema||'.'||c.table_name as view_id,
+        column_name as name,
+        ordinal_position as ordinal,
+        case is_nullable
+          when 'YES' then true 
+          when 'NO' then false
+        end as is_nullable,
+        udt_name as type_name,
+        coalesce(character_maximum_length, character_octet_length) as max_length,
+        numeric_precision as precision,
+        datetime_precision as datetime_precision,
+        numeric_scale as scale,
+        case data_type
+          when 'ARRAY' then true
           else false
         end as is_multiset,
         null as collation_catalog_name,
@@ -172,22 +155,23 @@
         null as char_set_catalog_name,
         null as char_set_schema_name,
         null as char_set_name,
-        case
-          when pg_get_expr(ad.adbin, ad.adrelid) like 'nextval%' then true
-          else false
+        case (select count(column_name) from information_schema.key_column_usage as u
+              where u.table_catalog = c.table_catalog and
+              u.table_schema = c.table_schema and
+              u.table_name = c.table_name and
+              u.column_name = c.column_name)
+          when 1 then true
+          when 0 then false
         end as is_identity,
         false as is_generated,
--- default value column
-        ad.adsrc as default_value
-        from pg_attribute a
-          join pg_class c
-          on a.attrelid = c.oid
-          join pg_type t
-          on a.atttypid = t.oid
-          left join pg_attrdef ad
-          on a.attrelid = ad.adrelid AND a.attnum = ad.adnum
-        where t.typtype = 'b' and c.relkind = 'v' and a.attnum >= 0 and c.relnamespace in
-        (select oid from pg_namespace where nspname not in ('pg_catalog','information_schema'))
+        column_default as default_value
+        from information_schema.columns as c
+        inner join information_schema.tables as t
+          on c.table_catalog = t.table_catalog and
+             c.table_schema = t.table_schema and
+             c.table_name = t.table_name
+        where c.table_schema not in ('pg_catalog','information_schema') and
+              t.table_type = 'VIEW';
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewConstraints" EntityType="NpgsqlSchema.ViewConstraint">
@@ -203,19 +187,19 @@
     <EntitySet Name="PgFunctions" EntityType="NpgsqlSchema.Function">
       <DefiningQuery>
         select
-        cast(p.oid as varchar) as id,
-        current_database() as catalog_name,
-        n.nspname AS schema_name,
-        p.proname as name,
+        r.specific_catalog||'.'||r.specific_schema||'.'||r.specific_name as id,
+        r.routine_catalog as catalog_name,
+        r.routine_schema as schema_name,
+        r.routine_name as name,
         false as is_builtin,
         false as is_niladic,
-        t.typname as returntype,
+        type_udt_name as returntype,
         null as max_length,
         null as precision,
         null as datetime_precision,
         null as scale,
-        case
-          when t.typlen = -1 and t.typelem != 0 then true
+        case data_type
+          when 'ARRAY' then true
           else false
         end as is_multiset,
         null as collation_catalog_name,
@@ -225,31 +209,25 @@
         null as char_set_schema_name,
         null as char_set_name,
         false as is_aggregate
-        from pg_proc p
-        left join pg_namespace n
-        on n.oid = p.pronamespace
-        left join pg_type t
-        on p.prorettype = t.oid
-        where (p.proretset = false and t.typname != 'void') and n.nspname not in ('pg_catalog','information_schema') and p.proname not in (select pg_proc.proname from pg_proc group by pg_proc.proname having count(pg_proc.proname) > 1)
+        from information_schema.routines as r
+        where data_type != 'void' and 
+              routine_schema not in ('pg_catalog','information_schema');
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgFunctionParameters" EntityType="NpgsqlSchema.FunctionParameter">
       <DefiningQuery>
         select
-        cast(ss.p_oid as varchar) || '.' || cast((ss.x).n as varchar) as id,
-        cast(ss.p_oid as varchar) as function_id,
-        case
-          when NULLIF(ss.proargnames[(ss.x).n], '') is null then 'x'
-          else ss.proargnames[(ss.x).n]
-        end as name,
-        (ss.x).n as ordinal,
-        t.typname as type_name,
+        p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name||'.'||p.ordinal_position as id,
+        p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name as function_id,
+        coalesce(p.parameter_name, 'x') as name,
+        p.ordinal_position as ordinal,
+        p.udt_name as type_name,
         null as max_length,
         null as precision,
         null as datetime_precision,
         null as scale,
-        case
-          when t.typlen = -1 and t.typelem != 0 then true
+        case p.data_type
+          when 'ARRAY' then true
           else false
         end as is_multiset,
         null as collation_catalog_name,
@@ -258,69 +236,47 @@
         null as char_set_catalog_name,
         null as char_set_schema_name,
         null as char_set_name,
-        case
-          when ss.proargmodes IS null then 'IN'
-          when ss.proargmodes[(ss.x).n] = 'i' then 'IN'
-          when ss.proargmodes[(ss.x).n] = 'o' then 'OUT'
-          when ss.proargmodes[(ss.x).n] = 'b' then 'INOUT'
-          else null
-        end as mode,
+        p.parameter_mode as mode,
         null as default
-        from pg_type t
-          join (select
-            n.nspname AS n_nspname,
-            p.proname,
-            p.oid AS p_oid,
-            p.proargnames,
-            p.proargmodes,
-            p.proretset,
-            p.prorettype,
-            information_schema._pg_expandarray(COALESCE(p.proallargtypes, p.proargtypes::oid[])) AS x
-            from pg_namespace n
-              join pg_proc p
-              on n.oid = p.pronamespace and p.proname not in (select pg_proc.proname from pg_proc group by pg_proc.proname having count(pg_proc.proname) > 1)) ss
-          on t.oid = (ss.x).x
-            join pg_type rt
-          on ss.prorettype = rt.oid
-          where (ss.proretset = false and rt.typname != 'void') and ss.n_nspname not in ('pg_catalog','information_schema')
+        from information_schema.parameters as p
+        join information_schema.routines as r
+          on p.specific_catalog = r.specific_catalog and
+             p.specific_schema = r.specific_schema and
+             p.specific_name = r.specific_name
+        where p.specific_schema not in ('pg_catalog','information_schema') and
+              r.data_type != 'void'
+        ;
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgProcedures" EntityType="NpgsqlSchema.Procedure">
       <DefiningQuery>
         select
-        cast(p.oid as varchar) as id,
-        current_database() as catalog_name,
-        n.nspname AS schema_name,
-        p.proname as name,
+        r.specific_catalog||'.'||r.specific_schema||'.'||r.specific_name as id,
+        r.routine_catalog as catalog_name,
+        r.routine_schema as schema_name,
+        r.routine_name as name,
         false as is_builtin,
         false as is_niladic,
-        --t.typname as returntype,
         false as is_aggregate
-        from pg_proc p
-        left join pg_namespace n
-        on n.oid = p.pronamespace
-        left join pg_type t
-        on p.prorettype = t.oid
-        where (p.proretset = true or t.typname = 'void') and n.nspname not in ('pg_catalog','information_schema') and p.proname not in (select pg_proc.proname from pg_proc group by pg_proc.proname having count(pg_proc.proname) > 1)
+        from information_schema.routines as r
+        where data_type = 'void' and 
+              routine_schema not in ('pg_catalog','information_schema');
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgProcedureParameters" EntityType="NpgsqlSchema.ProcedureParameter">
       <DefiningQuery>
         select
-        cast(ss.p_oid as varchar) || '.' || cast((ss.x).n as varchar) as id,
-        cast(ss.p_oid as varchar) as procedure_id,
-        case
-          when NULLIF(ss.proargnames[(ss.x).n], '') is null then 'x'
-          else ss.proargnames[(ss.x).n]
-        end as name,
-        (ss.x).n as ordinal,
-        t.typname as type_name,
+        p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name||'.'||p.ordinal_position as id,
+        p.specific_catalog||'.'||p.specific_schema||'.'||p.specific_name as function_id,
+        coalesce(p.parameter_name, 'x') as name,
+        p.ordinal_position as ordinal,
+        p.udt_name as type_name,
         null as max_length,
         null as precision,
         null as datetime_precision,
         null as scale,
-        case
-          when t.typlen = -1 and t.typelem != 0 then true
+        case p.data_type
+          when 'ARRAY' then true
           else false
         end as is_multiset,
         null as collation_catalog_name,
@@ -329,52 +285,31 @@
         null as char_set_catalog_name,
         null as char_set_schema_name,
         null as char_set_name,
-        case
-          when ss.proargmodes IS null then 'IN'
-          when ss.proargmodes[(ss.x).n] = 'i' then 'IN'
-          when ss.proargmodes[(ss.x).n] = 'o' then 'OUT'
-          when ss.proargmodes[(ss.x).n] = 'b' then 'INOUT'
-          else null
-        end as mode,
+        p.parameter_mode as mode,
         null as default
-        from pg_type t
-          join (select
-            n.nspname AS n_nspname,
-            p.proname,
-            p.oid AS p_oid,
-            p.proargnames,
-            p.proargmodes,
-            p.proretset,
-            p.prorettype,
-            information_schema._pg_expandarray(COALESCE(p.proallargtypes, p.proargtypes::oid[])) AS x
-            from pg_namespace n
-              join pg_proc p
-              on n.oid = p.pronamespace and p.proname not in (select pg_proc.proname from pg_proc group by pg_proc.proname having count(pg_proc.proname) > 1)) ss
-          on t.oid = (ss.x).x
-            join pg_type rt
-          on ss.prorettype = rt.oid
-          where (ss.proretset = true or rt.typname = 'void') and ss.n_nspname not in ('pg_catalog','information_schema')
+        from information_schema.parameters as p
+        join information_schema.routines as r
+          on p.specific_catalog = r.specific_catalog and
+             p.specific_schema = r.specific_schema and
+             p.specific_name = r.specific_name
+        where p.specific_schema not in ('pg_catalog','information_schema') and
+              r.data_type = 'void'
+        ;
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgConstraintColumns" EntityType="NpgsqlSchema.ConstraintColumn">
       <DefiningQuery>
         select
-        cast(a.attrelid as varchar) || '.' || cast (a.attnum as varchar) as column_id,
-        cast(coid as varchar) as constraint_id,
-        (ss.x).n as ordinal
-        from pg_attribute a
-        join (select
-          r.oid AS roid,
-          c.oid as coid,
-          c.conname,
-          information_schema._pg_expandarray(c.conkey) as x,
-          r.relnamespace as rrelnamespace
-          from pg_constraint c
-            join pg_class r
-            on r.oid = c.conrelid
-          where r.relkind = 'r') ss
-        on a.attrelid = ss.roid and a.attnum = (ss.x).x and not a.attisdropped and rrelnamespace in
-        (select oid from pg_namespace where nspname not in ('pg_catalog','information_schema'))
+        u.table_catalog||'.'||u.table_schema||'.'||u.table_name||'.'||u.column_name as column_id,
+        cc.constraint_catalog||'.'||cc.constraint_schema||'.'||cc.constraint_name as constraint_id,
+        u.ordinal_position as ordinal
+        from information_schema.constraint_column_usage as cc
+        left join information_schema.key_column_usage as u
+          on cc.constraint_catalog = u.constraint_catalog and
+             cc.constraint_schema = u.constraint_schema and
+             cc.constraint_name = u.constraint_name and
+             cc.column_name = u.column_name
+        where cc.table_schema not in ('pg_catalog','information_schema');
       </DefiningQuery>
     </EntitySet>
     <EntitySet Name="PgViewConstraintColumns" EntityType="NpgsqlSchema.ViewConstraintColumn">
