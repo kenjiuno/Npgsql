@@ -69,293 +69,7 @@ namespace Npgsql.VisualStudio.Provider {
         }
 
         private void bEFv5_Click(object sender, EventArgs e) {
-            tabControl1.SelectedTab = tabPage2;
-
-            UnsuggestAll();
-
-            rtb.Clear();
-
-            try {
-                {
-                    Log("Check your active project... ");
-
-                    var proj = GetActiveProject();
-                    Log(proj.Name, Color.Blue);
-
-                    Newl();
-
-                }
-                {
-                    Log("Check if Npgsql is registered in <DbProviderFactories>... ");
-
-                    var dbf = System.Data.Common.DbProviderFactories.GetFactory("Npgsql");
-
-                    if (dbf != null) {
-                        Log("Yes", Color.Blue);
-                    }
-                    else {
-                        Log("No", Color.Red);
-                    }
-
-                    Newl();
-                }
-                System.Reflection.AssemblyName verNpgsql = null;
-                {
-                    Log("Check version of Npgsql in NpgsqlDdexProvider... ");
-
-                    var dbf1 = Npgsql.NpgsqlFactory.Instance;
-
-                    Log(dbf1.GetType().Assembly.FullName, Color.Blue);
-                    Newl();
-
-                    {
-                        Log("Check version of Npgsql from DbProviderFactories.GetFactory... ");
-
-                        var dbf2 = System.Data.Common.DbProviderFactories.GetFactory("Npgsql");
-
-                        if (dbf2 != null) {
-                            Log(dbf2.GetType().Assembly.FullName, Color.Blue);
-                            Newl();
-
-                            {
-                                Log("Check location of Npgsql assembly in NpgsqlDdexProvider... ");
-
-                                var loc1 = dbf1.GetType().Assembly.Location;
-                                Log(loc1, Color.Blue);
-                                Newl();
-
-                                Log("Check location of Npgsql assembly from DbProviderFactories.GetFactory... ");
-
-                                var loc2 = dbf2.GetType().Assembly.Location;
-                                Log(loc2, Color.Blue);
-                                Newl();
-
-                                Log("Check if 2 Npgsql assemblies are equivalent... ");
-                                if (loc1.Equals(loc2)) {
-                                    Log("Yes", Color.Blue);
-                                    Newl();
-
-                                    {
-                                        Log("Check Npgsql assembly version... ");
-
-                                        verNpgsql = new AssemblyName(dbf2.GetType().Assembly.FullName);
-
-                                        Log(verNpgsql.Version + "", Color.Blue);
-                                    }
-                                }
-                                else {
-                                    Log("No", Color.Red);
-
-                                    SuggestIt(llRestart);
-                                    SuggestIt(llGrab);
-                                }
-                                Newl();
-                            }
-                        }
-                        else {
-                            Log("(Absent)", Color.Blue);
-                            Newl();
-                        }
-                    }
-                }
-
-                {
-                    Log("Check if C# or VB.NET project... ");
-
-                    var proj = GetActiveProject();
-                    if (proj != null) {
-                        var vcs = proj.Object as VSLangProj80.VSProject2;
-                        if (vcs != null) {
-                            Log("Yes", Color.Blue);
-                            Newl();
-
-                            {
-                                Version need = new Version("5.0.0.0");
-                                var name = "EntityFramework";
-
-                                Log("Check if " + name + " " + need + " is referenced... ");
-
-                                Version found = null;
-
-                                if (vcs.References != null) {
-                                    foreach (VSLangProj.Reference re in vcs.References) {
-                                        if (name.Equals(re.Identity, StringComparison.InvariantCultureIgnoreCase)) {
-                                            found = new Version(re.Version);
-                                        }
-                                    }
-                                }
-
-                                if (found == null) {
-                                    Log("Not found in assembly reference", Color.Red);
-                                    Newl();
-                                    SuggestIt(llEFv5);
-                                }
-                                else if (need == found) {
-                                    Log("Yes", Color.Blue);
-                                    Newl();
-                                }
-                                else {
-                                    Log("No, " + found + " is referenced", Color.Red);
-                                    Newl();
-                                    SuggestIt(llEFv5);
-                                }
-                            }
-
-                            if (verNpgsql != null && verNpgsql.Version != null) {
-                                var need = verNpgsql.Version;
-                                var name = "EntityFramework5.Npgsql";
-
-                                Log("Check if " + name + " " + need + " is referenced... ");
-
-                                Version found = null;
-
-                                if (vcs.References != null) {
-                                    foreach (VSLangProj.Reference re in vcs.References) {
-                                        if (name.Equals(re.Identity, StringComparison.InvariantCultureIgnoreCase)) {
-                                            found = new Version(re.Version);
-                                        }
-                                    }
-                                }
-
-                                if (found == null) {
-                                    Log("Not found in assembly reference", Color.Red);
-                                    Newl();
-                                    SuggestIt(llEFv5);
-                                }
-                                else if (need == found) {
-                                    Log("Yes", Color.Blue);
-                                    Newl();
-                                }
-                                else {
-                                    Log("No, " + found + " is referenced", Color.Red);
-                                    Newl();
-                                    SuggestIt(llEFv5);
-                                }
-                            }
-
-                            {
-                                Log("Check App.config or Web.config is included... ");
-
-                                String fpXml = null;
-                                foreach (EnvDTE.ProjectItem pi in proj.ProjectItems) {
-                                    if (false
-                                        || "App.config".Equals(pi.Name, StringComparison.InvariantCultureIgnoreCase)
-                                        || "Web.config".Equals(pi.Name, StringComparison.InvariantCultureIgnoreCase)
-                                    ) {
-                                        fpXml = pi.FileNames[1];
-                                        break;
-                                    }
-                                }
-
-                                if (fpXml != null) {
-                                    Log("Yes", Color.Blue);
-                                    Newl();
-
-                                    Log("Check if XmlDocument can load it... ");
-
-                                    XmlDocument xd = new XmlDocument();
-                                    xd.Load(fpXml);
-
-                                    Log("Yes", Color.Blue);
-                                    Newl();
-
-                                    {
-                                        Log("Check <configuration>... ");
-                                        var el1 = xd.SelectSingleNode("/configuration") as XmlElement;
-                                        if (el1 != null) {
-                                            Log("Yes", Color.Blue);
-                                            Newl();
-
-                                            Log("Check <system.data>... ");
-                                            var el2 = el1.SelectSingleNode("system.data") as XmlElement;
-                                            if (el2 != null) {
-                                                Log("Yes", Color.Blue);
-                                                Newl();
-
-                                                Log("Check <DbProviderFactories>... ");
-                                                var el3 = el2.SelectSingleNode("DbProviderFactories") as XmlElement;
-                                                if (el3 != null) {
-                                                    Log("Yes", Color.Blue);
-                                                    Newl();
-
-                                                    {
-                                                        Log("Check <remove invariant=\"Npgsql\" />... ");
-                                                        var el4 = el3.SelectSingleNode("remove[@invariant='Npgsql']") as XmlElement;
-                                                        if (el4 != null) {
-                                                            Log("Yes", Color.Blue);
-                                                            Newl();
-                                                        }
-                                                        else {
-                                                            Log("No", Color.Red);
-                                                            Newl();
-                                                        }
-                                                    }
-                                                    {
-                                                        Log("Check <add invariant=\"Npgsql\" ... />... ");
-                                                        var el4 = el3.SelectSingleNode("add[@invariant='Npgsql']") as XmlElement;
-                                                        if (el4 != null) {
-                                                            Log("Yes", Color.Blue);
-                                                            Newl();
-
-                                                            {
-                                                                Log("Check if type=\"Npgsql.NpgsqlFactory, Npgsql\"... ");
-                                                                var NpgsqlFactory = (el4.GetAttribute("type"));
-                                                                if (true
-                                                                    && NpgsqlFactory != null
-                                                                    && NpgsqlFactory.Equals("Npgsql.NpgsqlFactory, Npgsql")
-                                                                ) {
-                                                                    Log("Yes", Color.Blue);
-                                                                    Newl();
-                                                                }
-                                                                else {
-                                                                    Log("No", Color.Red);
-                                                                    Newl();
-                                                                }
-                                                            }
-                                                        }
-                                                        else {
-                                                            Log("No", Color.Red);
-                                                            Newl();
-                                                        }
-                                                    }
-                                                }
-                                                else {
-                                                    Log("No", Color.Red);
-                                                    Newl();
-                                                }
-                                            }
-                                            else {
-                                                Log("No", Color.Red);
-                                                Newl();
-                                            }
-                                        }
-                                        else {
-                                            Log("No", Color.Red);
-                                            Newl();
-                                        }
-                                    }
-                                }
-                                else {
-                                    Log("No", Color.Red);
-                                    Newl();
-                                }
-                            }
-                        }
-                        else {
-                            Log("No", Color.Red);
-                            Newl();
-                        }
-                    }
-                    else {
-                        Log("No active project selected", Color.Red);
-                        Newl();
-                    }
-                }
-                tabControl1.SelectedTab = tabPage3;
-            }
-            catch (Exception err) {
-                Log("" + err, Color.Purple);
-            }
+            CheckEF(false);
         }
 
         private void UnsuggestAll() {
@@ -365,6 +79,7 @@ namespace Npgsql.VisualStudio.Provider {
             UnsuggestIt(llEFv5);
             UnsuggestIt(llEFv6);
             UnsuggestIt(llRestart);
+            UnsuggestIt(llBuild);
         }
 
         private void SuggestIt(LinkLabel ll) {
@@ -377,6 +92,10 @@ namespace Npgsql.VisualStudio.Provider {
         }
 
         private void bEFv6_Click(object sender, EventArgs e) {
+            CheckEF(true);
+        }
+
+        void CheckEF(bool v6) {
             tabControl1.SelectedTab = tabPage2;
 
             UnsuggestAll();
@@ -394,9 +113,15 @@ namespace Npgsql.VisualStudio.Provider {
 
                 }
                 {
-                    Log("Check if Npgsql is registered in <DbProviderFactories>... ");
+                    Log("Check if Npgsql is registered in host devenv's <DbProviderFactories>... ");
 
-                    var dbf = System.Data.Common.DbProviderFactories.GetFactory("Npgsql");
+                    Object dbf = null;
+                    try {
+                        dbf = System.Data.Common.DbProviderFactories.GetFactory("Npgsql");
+                    }
+                    catch (Exception) {
+
+                    }
 
                     if (dbf != null) {
                         Log("Yes", Color.Blue);
@@ -417,7 +142,7 @@ namespace Npgsql.VisualStudio.Provider {
                     Newl();
 
                     {
-                        Log("Check version of Npgsql from DbProviderFactories.GetFactory... ");
+                        Log("Check version of Npgsql from host devenv's DbProviderFactories.GetFactory... ");
 
                         var dbf2 = System.Data.Common.DbProviderFactories.GetFactory("Npgsql");
 
@@ -432,7 +157,7 @@ namespace Npgsql.VisualStudio.Provider {
                                 Log(loc1, Color.Blue);
                                 Newl();
 
-                                Log("Check location of Npgsql assembly from DbProviderFactories.GetFactory... ");
+                                Log("Check location of Npgsql assembly from host devenv's DbProviderFactories.GetFactory... ");
 
                                 var loc2 = dbf2.GetType().Assembly.Location;
                                 Log(loc2, Color.Blue);
@@ -444,20 +169,68 @@ namespace Npgsql.VisualStudio.Provider {
                                     Newl();
 
                                     {
-                                        Log("Check Npgsql assembly version... ");
+                                        Log("Check both Npgsql assembly version... ");
 
                                         verNpgsql = new AssemblyName(dbf2.GetType().Assembly.FullName);
 
                                         Log(verNpgsql.Version + "", Color.Blue);
+                                        Newl();
+
+                                        {
+                                            Log("Check Npgsql assembly version in OutputPath... ");
+
+                                            var proj = GetActiveProject();
+                                            if (proj != null) {
+                                                var vcs = proj.Object as VSLangProj80.VSProject2;
+                                                if (vcs != null) {
+                                                    try {
+                                                        var FullPath = "" + PPUt.Get(proj, "FullPath", "");
+                                                        var OutputPath = "" + PPUt.Get(proj, "OutputPath", "");
+                                                        var fpBinNpgsql = System.IO.Path.Combine(FullPath, OutputPath, "Npgsql.dll");
+                                                        if (System.IO.File.Exists(fpBinNpgsql)) {
+                                                            var verBinNpgsql = AssemblyName.GetAssemblyName(fpBinNpgsql).Version;
+                                                            if (verBinNpgsql == dbf1.GetType().Assembly.GetName().Version) {
+                                                                Log(verBinNpgsql + "", Color.Blue);
+                                                                Newl();
+                                                            }
+                                                            else {
+                                                                Log(verBinNpgsql + ", you need to build once.", Color.Red);
+                                                                Newl();
+
+                                                                SuggestIt(llBuild);
+                                                            }
+                                                        }
+                                                        else {
+                                                            Log("No Npgsql.dll placed at " + fpBinNpgsql, Color.Blue);
+                                                            Newl();
+
+                                                            SuggestIt(llBuild);
+                                                        }
+                                                    }
+                                                    catch (Exception err) {
+                                                        Log("Failed. " + err, Color.Red);
+                                                        Newl();
+                                                    }
+                                                }
+                                                else {
+                                                    Log("No C# or VB.NET active project", Color.Blue);
+                                                    Newl();
+                                                }
+                                            }
+                                            else {
+                                                Log("No active project", Color.Blue);
+                                                Newl();
+                                            }
+                                        }
                                     }
                                 }
                                 else {
                                     Log("No", Color.Red);
+                                    Newl();
 
                                     SuggestIt(llRestart);
                                     SuggestIt(llGrab);
                                 }
-                                Newl();
                             }
                         }
                         else {
@@ -477,8 +250,13 @@ namespace Npgsql.VisualStudio.Provider {
                             Log("Yes", Color.Blue);
                             Newl();
 
+                            var llEFvx = v6 ? llEFv6 : llEFv5;
+
                             {
-                                Version need = new Version("6.0.0.0");
+                                Version need = v6
+                                    ? new Version("6.0.0.0")
+                                    : new Version("5.0.0.0")
+                                    ;
                                 var name = "EntityFramework";
 
                                 Log("Check if " + name + " " + need + " is referenced... ");
@@ -496,7 +274,7 @@ namespace Npgsql.VisualStudio.Provider {
                                 if (found == null) {
                                     Log("Not found in assembly reference", Color.Red);
                                     Newl();
-                                    SuggestIt(llEFv6);
+                                    SuggestIt(llEFvx);
                                 }
                                 else if (need == found) {
                                     Log("Yes", Color.Blue);
@@ -505,13 +283,16 @@ namespace Npgsql.VisualStudio.Provider {
                                 else {
                                     Log("No, " + found + " is referenced", Color.Red);
                                     Newl();
-                                    SuggestIt(llEFv6);
+                                    SuggestIt(llEFvx);
                                 }
                             }
 
                             if (verNpgsql != null && verNpgsql.Version != null) {
                                 var need = verNpgsql.Version;
-                                var name = "EntityFramework6.Npgsql";
+                                var name = v6
+                                    ? "EntityFramework6.Npgsql"
+                                    : "EntityFramework5.Npgsql"
+                                    ;
 
                                 Log("Check if " + name + " " + need + " is referenced... ");
 
@@ -528,7 +309,7 @@ namespace Npgsql.VisualStudio.Provider {
                                 if (found == null) {
                                     Log("Not found in assembly reference", Color.Red);
                                     Newl();
-                                    SuggestIt(llEFv6);
+                                    SuggestIt(llEFvx);
                                 }
                                 else if (need == found) {
                                     Log("Yes", Color.Blue);
@@ -537,7 +318,7 @@ namespace Npgsql.VisualStudio.Provider {
                                 else {
                                     Log("No, " + found + " is referenced", Color.Red);
                                     Newl();
-                                    SuggestIt(llEFv6);
+                                    SuggestIt(llEFvx);
                                 }
                             }
 
@@ -611,7 +392,7 @@ namespace Npgsql.VisualStudio.Provider {
                                                                     var NpgsqlFactory = (el4.GetAttribute("type"));
                                                                     if (true
                                                                         && NpgsqlFactory != null
-                                                                        && NpgsqlFactory.Equals("Npgsql.NpgsqlFactory, Npgsql")
+                                                                        && System.Text.RegularExpressions.Regex.Replace(NpgsqlFactory, "\\s+", "").Equals("Npgsql.NpgsqlFactory,Npgsql")
                                                                     ) {
                                                                         Log("Yes", Color.Blue);
                                                                         Newl();
@@ -666,7 +447,7 @@ namespace Npgsql.VisualStudio.Provider {
                                                     Newl();
                                                 }
                                             }
-                                            {
+                                            if (v6) {
                                                 Log("Check <entityFramework>... ");
                                                 var el2 = el1.SelectSingleNode("entityFramework") as XmlElement;
                                                 if (el2 != null) {
@@ -732,6 +513,41 @@ namespace Npgsql.VisualStudio.Provider {
                 Log("" + err, Color.Purple);
             }
 
+        }
+
+        class PPUt {
+            public static String Get(EnvDTE.Project proj, String name, String defv) {
+                if (proj != null) {
+                    var cm = proj.ConfigurationManager;
+                    if (cm != null) {
+                        var ac = cm.ActiveConfiguration;
+                        if (ac != null) {
+                            var props = ac.Properties;
+                            if (props != null) {
+                                try {
+                                    var it = props.Item(name);
+                                    if (it != null)
+                                        return "" + it.Value;
+                                }
+                                catch (ArgumentException) { } // prop not found
+                            }
+                        }
+                    }
+
+                    {
+                        var props = proj.Properties;
+                        if (props != null) {
+                            try {
+                                var it = props.Item(name);
+                                if (it != null)
+                                    return "" + it.Value;
+                            }
+                            catch (ArgumentException) { } // prop not found
+                        }
+                    }
+                }
+                return defv;
+            }
         }
 
         private bool TryOpen(String url) {
@@ -889,7 +705,7 @@ namespace Npgsql.VisualStudio.Provider {
         const String EFv6Provider = "Npgsql.NpgsqlServices, EntityFramework6.Npgsql";
 
         private void llEFv5_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            if (MessageBox.Show(this, "Run NuGet?", null, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) != DialogResult.OK)
+            if (MessageBox.Show(this, "Do NuGet now? \n\nTakes some minutes.", null, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) != DialogResult.OK)
                 return;
 
             // https://docs.nuget.org/create/invoking-nuget-services-from-inside-visual-studio
@@ -909,7 +725,7 @@ namespace Npgsql.VisualStudio.Provider {
         }
 
         private void llEFv6_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            if (MessageBox.Show(this, "Run NuGet?", null, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) != DialogResult.OK)
+            if (MessageBox.Show(this, "Do NuGet now? \n\nTakes some minutes.", null, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) != DialogResult.OK)
                 return;
 
             var proj = GetActiveProject();

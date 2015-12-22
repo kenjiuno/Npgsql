@@ -130,12 +130,34 @@ namespace Npgsql.VisualStudio.Provider {
                 + "\n"
                 + typeof(Npgsql.NpgsqlFactory).Assembly.FullName
                 , "NpgsqlDdexProvider")) {
-                CheckNpgsqlStatus.DoInst();
+                try {
+                    CheckNpgsqlStatus.DoInst();
+                }
+                catch (UnauthorizedAccessException err) {
+                    UIUt.Alert(this, "Grant write access to: \n" + CheckNpgsqlStatus.Ut.HostConfig + "\n\n---\n" + err, "NpgsqlDdexProvider");
+                    if (PEUt.GrantEditAccess(CheckNpgsqlStatus.Ut.HostConfig)) {
+                        CheckNpgsqlStatus.DoInst();
+                    }
+                }
 
                 UIUt.Alert(this, "Modification successful. \n"
                     + "\n"
                     + "Please restart this VisualStudio."
                     , "NpgsqlDdexProvider");
+            }
+        }
+
+        class PEUt {
+            public static bool GrantEditAccess(String fp) {
+                ProcessStartInfo psi = new ProcessStartInfo("icacls.exe", String.Format(" \"{0}\" /grant \"{1}:M\" "
+                    , fp
+                    , Environment.UserDomainName + "\\" + Environment.UserName
+                    ));
+                psi.UseShellExecute = true;
+                psi.Verb = "runas";
+                Process p = Process.Start(psi);
+                p.WaitForExit();
+                return p.ExitCode == 0;
             }
         }
 
@@ -152,7 +174,15 @@ namespace Npgsql.VisualStudio.Provider {
                 + "\n"
                 + CheckNpgsqlStatus.Ut.HostConfig + "\n"
                 , "NpgsqlDdexProvider")) {
-                CheckNpgsqlStatus.DoUninst();
+                try {
+                    CheckNpgsqlStatus.DoUninst();
+                }
+                catch (UnauthorizedAccessException err) {
+                    UIUt.Alert(this, "Grant write access to: \n" + CheckNpgsqlStatus.Ut.HostConfig + "\n\n---\n" + err, "NpgsqlDdexProvider");
+                    if (PEUt.GrantEditAccess(CheckNpgsqlStatus.Ut.HostConfig)) {
+                        CheckNpgsqlStatus.DoUninst();
+                    }
+                }
 
                 UIUt.Alert(this, "Uninstall successful. \n"
                     + "\n"

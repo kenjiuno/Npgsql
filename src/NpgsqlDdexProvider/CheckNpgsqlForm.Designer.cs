@@ -43,12 +43,13 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.rtb = new System.Windows.Forms.RichTextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.llRestart = new System.Windows.Forms.LinkLabel();
             this.llEFv5 = new System.Windows.Forms.LinkLabel();
             this.llEFv6 = new System.Windows.Forms.LinkLabel();
             this.llProvider = new System.Windows.Forms.LinkLabel();
             this.llADONet = new System.Windows.Forms.LinkLabel();
             this.llGrab = new System.Windows.Forms.LinkLabel();
-            this.llRestart = new System.Windows.Forms.LinkLabel();
+            this.llBuild = new System.Windows.Forms.LinkLabel();
             bEFv5 = new System.Windows.Forms.ToolStripButton();
             bEFv6 = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -66,7 +67,7 @@
             bEFv5.Image = ((System.Drawing.Image)(resources.GetObject("bEFv5.Image")));
             bEFv5.ImageTransparentColor = System.Drawing.Color.Magenta;
             bEFv5.Name = "bEFv5";
-            bEFv5.Size = new System.Drawing.Size(92, 24);
+            bEFv5.Size = new System.Drawing.Size(107, 24);
             bEFv5.Text = "Test EFv5";
             bEFv5.Click += new System.EventHandler(this.bEFv5_Click);
             // 
@@ -75,7 +76,7 @@
             bEFv6.Image = ((System.Drawing.Image)(resources.GetObject("bEFv6.Image")));
             bEFv6.ImageTransparentColor = System.Drawing.Color.Magenta;
             bEFv6.Name = "bEFv6";
-            bEFv6.Size = new System.Drawing.Size(92, 24);
+            bEFv6.Size = new System.Drawing.Size(107, 24);
             bEFv6.Text = "Test EFv6";
             bEFv6.Click += new System.EventHandler(this.bEFv6_Click);
             // 
@@ -89,7 +90,7 @@
             bCopy.Image = ((System.Drawing.Image)(resources.GetObject("bCopy.Image")));
             bCopy.ImageTransparentColor = System.Drawing.Color.Magenta;
             bCopy.Name = "bCopy";
-            bCopy.Size = new System.Drawing.Size(96, 24);
+            bCopy.Size = new System.Drawing.Size(112, 29);
             bCopy.Text = "&Copy text";
             bCopy.Click += new System.EventHandler(this.bCopy_Click);
             // 
@@ -162,9 +163,10 @@
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(600, 460);
+            this.tabControl1.Size = new System.Drawing.Size(777, 563);
             this.tabControl1.TabIndex = 4;
             // 
             // tabPage1
@@ -172,10 +174,11 @@
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.b6);
             this.tabPage1.Controls.Add(this.b5);
-            this.tabPage1.Location = new System.Drawing.Point(4, 25);
+            this.tabPage1.Location = new System.Drawing.Point(4, 28);
+            this.tabPage1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(592, 431);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage1.Size = new System.Drawing.Size(742, 520);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Welcome!";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -183,17 +186,19 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 35);
+            this.label1.Location = new System.Drawing.Point(10, 42);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(192, 15);
+            this.label1.Size = new System.Drawing.Size(220, 18);
             this.label1.TabIndex = 0;
             this.label1.Text = "Select a test for your needs:";
             // 
             // b6
             // 
-            this.b6.Location = new System.Drawing.Point(8, 164);
+            this.b6.Location = new System.Drawing.Point(10, 197);
+            this.b6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.b6.Name = "b6";
-            this.b6.Size = new System.Drawing.Size(300, 46);
+            this.b6.Size = new System.Drawing.Size(375, 55);
             this.b6.TabIndex = 2;
             this.b6.Text = "Check if EntityFramework6 is ready";
             this.b6.UseVisualStyleBackColor = true;
@@ -201,9 +206,10 @@
             // 
             // b5
             // 
-            this.b5.Location = new System.Drawing.Point(8, 84);
+            this.b5.Location = new System.Drawing.Point(10, 101);
+            this.b5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.b5.Name = "b5";
-            this.b5.Size = new System.Drawing.Size(300, 46);
+            this.b5.Size = new System.Drawing.Size(375, 55);
             this.b5.TabIndex = 1;
             this.b5.Text = "Check if EntityFramework5 is ready";
             this.b5.UseVisualStyleBackColor = true;
@@ -212,10 +218,11 @@
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.rtb);
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
+            this.tabPage2.Location = new System.Drawing.Point(4, 28);
+            this.tabPage2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(592, 431);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage2.Size = new System.Drawing.Size(742, 520);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Test and result";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -225,35 +232,50 @@
             this.rtb.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.rtb.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rtb.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.rtb.Location = new System.Drawing.Point(3, 3);
+            this.rtb.Location = new System.Drawing.Point(4, 4);
+            this.rtb.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.rtb.Name = "rtb";
-            this.rtb.Size = new System.Drawing.Size(586, 425);
+            this.rtb.Size = new System.Drawing.Size(734, 512);
             this.rtb.TabIndex = 3;
             this.rtb.Text = "";
             this.rtb.WordWrap = false;
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.llBuild);
             this.tabPage3.Controls.Add(this.llRestart);
             this.tabPage3.Controls.Add(this.llEFv5);
             this.tabPage3.Controls.Add(this.llEFv6);
             this.tabPage3.Controls.Add(this.llProvider);
             this.tabPage3.Controls.Add(this.llADONet);
             this.tabPage3.Controls.Add(this.llGrab);
-            this.tabPage3.Location = new System.Drawing.Point(4, 25);
+            this.tabPage3.Location = new System.Drawing.Point(4, 28);
+            this.tabPage3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(592, 431);
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage3.Size = new System.Drawing.Size(769, 531);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Suggestions";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // llRestart
+            // 
+            this.llRestart.AutoSize = true;
+            this.llRestart.Location = new System.Drawing.Point(10, 332);
+            this.llRestart.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.llRestart.Name = "llRestart";
+            this.llRestart.Size = new System.Drawing.Size(383, 18);
+            this.llRestart.TabIndex = 5;
+            this.llRestart.TabStop = true;
+            this.llRestart.Text = "  Restart VisualStudio. Npgsql assembly hook fails.";
+            // 
             // llEFv5
             // 
             this.llEFv5.AutoSize = true;
-            this.llEFv5.Location = new System.Drawing.Point(8, 178);
+            this.llEFv5.Location = new System.Drawing.Point(10, 214);
+            this.llEFv5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.llEFv5.Name = "llEFv5";
-            this.llEFv5.Size = new System.Drawing.Size(243, 15);
+            this.llEFv5.Size = new System.Drawing.Size(288, 18);
             this.llEFv5.TabIndex = 3;
             this.llEFv5.TabStop = true;
             this.llEFv5.Text = "  Add EntityFramework5.Npgsql %ver%";
@@ -262,9 +284,10 @@
             // llEFv6
             // 
             this.llEFv6.AutoSize = true;
-            this.llEFv6.Location = new System.Drawing.Point(8, 227);
+            this.llEFv6.Location = new System.Drawing.Point(10, 273);
+            this.llEFv6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.llEFv6.Name = "llEFv6";
-            this.llEFv6.Size = new System.Drawing.Size(243, 15);
+            this.llEFv6.Size = new System.Drawing.Size(288, 18);
             this.llEFv6.TabIndex = 4;
             this.llEFv6.TabStop = true;
             this.llEFv6.Text = "  Add EntityFramework6.Npgsql %ver%";
@@ -273,9 +296,10 @@
             // llProvider
             // 
             this.llProvider.AutoSize = true;
-            this.llProvider.Location = new System.Drawing.Point(8, 129);
+            this.llProvider.Location = new System.Drawing.Point(10, 155);
+            this.llProvider.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.llProvider.Name = "llProvider";
-            this.llProvider.Size = new System.Drawing.Size(356, 15);
+            this.llProvider.Size = new System.Drawing.Size(417, 18);
             this.llProvider.TabIndex = 2;
             this.llProvider.TabStop = true;
             this.llProvider.Text = "  Add EFv6 Npgsql provider to App.config or Web.config";
@@ -284,9 +308,10 @@
             // llADONet
             // 
             this.llADONet.AutoSize = true;
-            this.llADONet.Location = new System.Drawing.Point(8, 80);
+            this.llADONet.Location = new System.Drawing.Point(10, 96);
+            this.llADONet.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.llADONet.Name = "llADONet";
-            this.llADONet.Size = new System.Drawing.Size(379, 15);
+            this.llADONet.Size = new System.Drawing.Size(443, 18);
             this.llADONet.TabIndex = 1;
             this.llADONet.TabStop = true;
             this.llADONet.Text = "  Add Npgsql ADO.net provider to App.config or Web.config";
@@ -295,30 +320,33 @@
             // llGrab
             // 
             this.llGrab.AutoSize = true;
-            this.llGrab.Location = new System.Drawing.Point(8, 31);
+            this.llGrab.Location = new System.Drawing.Point(10, 37);
+            this.llGrab.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.llGrab.Name = "llGrab";
-            this.llGrab.Size = new System.Drawing.Size(304, 15);
+            this.llGrab.Size = new System.Drawing.Size(361, 18);
             this.llGrab.TabIndex = 0;
             this.llGrab.TabStop = true;
             this.llGrab.Text = "  Grab NpgsqlDdexProvider %ver%, and install it.";
             this.llGrab.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llGrab_LinkClicked);
             // 
-            // llRestart
+            // llBuild
             // 
-            this.llRestart.AutoSize = true;
-            this.llRestart.Location = new System.Drawing.Point(8, 276);
-            this.llRestart.Name = "llRestart";
-            this.llRestart.Size = new System.Drawing.Size(325, 15);
-            this.llRestart.TabIndex = 5;
-            this.llRestart.TabStop = true;
-            this.llRestart.Text = "  Restart VisualStudio. Npgsql assembly hook fails.";
+            this.llBuild.AutoSize = true;
+            this.llBuild.Location = new System.Drawing.Point(10, 391);
+            this.llBuild.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.llBuild.Name = "llBuild";
+            this.llBuild.Size = new System.Drawing.Size(487, 18);
+            this.llBuild.TabIndex = 6;
+            this.llBuild.TabStop = true;
+            this.llBuild.Text = "  Build your project once, in order to update Npgsql.dll in bin\\xxx";
             // 
             // CheckNpgsqlForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 460);
+            this.ClientSize = new System.Drawing.Size(777, 563);
             this.Controls.Add(this.tabControl1);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "CheckNpgsqlForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Check NpgsqlDdexProvider";
@@ -357,5 +385,6 @@
         private System.Windows.Forms.LinkLabel llEFv5;
         private System.Windows.Forms.LinkLabel llEFv6;
         private System.Windows.Forms.LinkLabel llRestart;
+        private System.Windows.Forms.LinkLabel llBuild;
     }
 }
