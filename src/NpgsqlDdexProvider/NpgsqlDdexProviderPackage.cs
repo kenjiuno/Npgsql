@@ -134,7 +134,7 @@ namespace Npgsql.VisualStudio.Provider {
                     CheckNpgsqlStatus.DoInst();
                 }
                 catch (UnauthorizedAccessException err) {
-                    UIUt.Alert(this, "Grant write access to: \n" + CheckNpgsqlStatus.Ut.HostConfig + "\n\n---\n" + err, "NpgsqlDdexProvider");
+                    UIUt.Alert(this, "Grant write access to: \n" + CheckNpgsqlStatus.Ut.HostConfig + "\n\nException message:\n---\n" + err + "\n---", "NpgsqlDdexProvider");
                     if (PEUt.GrantEditAccess(CheckNpgsqlStatus.Ut.HostConfig)) {
                         CheckNpgsqlStatus.DoInst();
                     }
@@ -178,7 +178,7 @@ namespace Npgsql.VisualStudio.Provider {
                     CheckNpgsqlStatus.DoUninst();
                 }
                 catch (UnauthorizedAccessException err) {
-                    UIUt.Alert(this, "Grant write access to: \n" + CheckNpgsqlStatus.Ut.HostConfig + "\n\n---\n" + err, "NpgsqlDdexProvider");
+                    UIUt.Alert(this, "Grant write access to: \n" + CheckNpgsqlStatus.Ut.HostConfig + "\n\nException message:\n---\n" + err + "\n---", "NpgsqlDdexProvider");
                     if (PEUt.GrantEditAccess(CheckNpgsqlStatus.Ut.HostConfig)) {
                         CheckNpgsqlStatus.DoUninst();
                     }

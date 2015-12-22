@@ -73,13 +73,9 @@ namespace Npgsql.VisualStudio.Provider {
         }
 
         private void UnsuggestAll() {
-            UnsuggestIt(llGrab);
-            UnsuggestIt(llADONet);
-            UnsuggestIt(llProvider);
-            UnsuggestIt(llEFv5);
-            UnsuggestIt(llEFv6);
-            UnsuggestIt(llRestart);
-            UnsuggestIt(llBuild);
+            foreach (var ll in tabPage3.Controls.OfType<LinkLabel>()) {
+                UnsuggestIt(ll);
+            }
         }
 
         private void SuggestIt(LinkLabel ll) {
@@ -163,7 +159,7 @@ namespace Npgsql.VisualStudio.Provider {
                                 Log(loc2, Color.Blue);
                                 Newl();
 
-                                Log("Check if 2 Npgsql assemblies are equivalent... ");
+                                Log("Check if 2 Npgsql assemblies have equivalent file path... ");
                                 if (loc1.Equals(loc2)) {
                                     Log("Yes", Color.Blue);
                                     Newl();
@@ -430,16 +426,33 @@ namespace Npgsql.VisualStudio.Provider {
                                                     Log("Yes", Color.Blue);
                                                     Newl();
 
-                                                    Log("Check <section name=\"entityFramework\" ...>... ");
-                                                    var el3 = el2.SelectSingleNode("section[@name='entityFramework']") as XmlElement;
-                                                    if (el3 != null) {
-                                                        Log("Yes", Color.Blue);
-                                                        Newl();
+                                                    {
+                                                        Log("Check <section name=\"entityFramework\" ...>... ");
+                                                        var el3 = el2.SelectSingleNode("section[@name='entityFramework']") as XmlElement;
+                                                        if (el3 != null) {
+                                                            Log("Yes", Color.Blue);
+                                                            Newl();
 
+                                                        }
+                                                        else {
+                                                            Log("No", Color.Red);
+                                                            Newl();
+                                                        }
                                                     }
-                                                    else {
-                                                        Log("No", Color.Red);
-                                                        Newl();
+
+                                                    {
+                                                        Log("Check <configSections> is located at first element... ");
+                                                        var el3 = el2.PreviousSibling as XmlElement;
+                                                        if (el3 == null) {
+                                                            Log("Yes", Color.Blue);
+                                                            Newl();
+                                                        }
+                                                        else {
+                                                            Log("No", Color.Red);
+                                                            Newl();
+
+                                                            SuggestIt(llConfigSections);
+                                                        }
                                                     }
                                                 }
                                                 else {
@@ -558,8 +571,17 @@ namespace Npgsql.VisualStudio.Provider {
             return false;
         }
 
+        private bool TryOpen2(params String[] urls) {
+            if (MessageBox.Show(this, "Open them?\n\n" + String.Join("\n", urls), null, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK) {
+                foreach (var url in urls)
+                    System.Diagnostics.Process.Start(url);
+                return true;
+            }
+            return false;
+        }
+
         private void llGrab_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            if (TryOpen("https://github.com/npgsql/npgsql/releases")) {
+            if (TryOpen2("https://github.com/npgsql/npgsql/releases", "https://github.com/kenjiuno/Npgsql/releases")) {
                 //UnsuggestIt((LinkLabel)sender);
             }
         }
@@ -717,6 +739,7 @@ namespace Npgsql.VisualStudio.Provider {
                 IVsPackageInstaller installer = componentModel.GetService<IVsPackageInstaller>();
                 installer.InstallPackage(null, proj, "EntityFramework5.Npgsql", typeof(NpgsqlConnection).Assembly.GetName().Version, false);
 
+                UnsuggestIt(llEFv5);
                 MessageBox.Show(this, "Done.", null, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception err) {
@@ -735,11 +758,50 @@ namespace Npgsql.VisualStudio.Provider {
                 IVsPackageInstaller installer = componentModel.GetService<IVsPackageInstaller>();
                 installer.InstallPackage(null, proj, "EntityFramework6.Npgsql", typeof(NpgsqlConnection).Assembly.GetName().Version, false);
 
+                UnsuggestIt(llEFv6);
                 MessageBox.Show(this, "Done.", null, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception err) {
                 MessageBox.Show(this, "InstallPackage failed.\n\n" + err, null, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
+        }
+
+        private void llConfigSections_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            if (MessageBox.Show(this, "Are you really?", null, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK) {
+                var proj = GetActiveProject();
+                if (proj != null) {
+                    String fpXml = null;
+                    foreach (EnvDTE.ProjectItem pi in proj.ProjectItems) {
+                        if (false
+                            || "App.config".Equals(pi.Name, StringComparison.InvariantCultureIgnoreCase)
+                            || "Web.config".Equals(pi.Name, StringComparison.InvariantCultureIgnoreCase)
+                        ) {
+                            fpXml = pi.FileNames[1];
+                            break;
+                        }
+                    }
+                    if (fpXml != null) {
+                        XmlDocument xd = new XmlDocument();
+                        xd.Load(fpXml);
+
+                        var el2 = xd.SelectSingleNode("/configuration/configSections") as XmlElement;
+                        if (el2 != null) {
+                            if (el2.PreviousSibling as XmlElement != null) {
+                                var el1 = el2.ParentNode as XmlElement;
+                                el1.PrependChild(el2);
+
+                                xd.Save(fpXml);
+                                MessageBox.Show(this, "Done.", null, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                                UnsuggestIt((LinkLabel)sender);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            MessageBox.Show(this, "Not changed.", null, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return;
         }
     }
 }
