@@ -1,1 +1,1 @@
-bin\Release-net452-vs2015\NpgsqlDdexProvider.vsix
+bin\Release-net452-vs2013\NpgsqlDdexProvider.vsix

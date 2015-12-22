@@ -102,5 +102,38 @@ namespace Npgsql.VisualStudio.Provider
                 xmlo.Save(fpxml);
             }
         }
+
+        public static bool NeedUninst
+        {
+            get
+            {
+                String fpxml = Ut.HostConfig;
+                if (File.Exists(fpxml)) {
+                    XmlDocument xmlo = new XmlDocument();
+                    xmlo.Load(fpxml);
+
+                    foreach (XmlElement elAdd in xmlo.SelectNodes("/configuration/system.data/DbProviderFactories/*[self::add[@invariant='Npgsql'] or self::remove[@invariant='Npgsql']]")) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        internal static void DoUninst() {
+            String fpxml = Ut.HostConfig;
+            if (File.Exists(fpxml)) {
+                XmlDocument xmlo = new XmlDocument();
+                if (File.Exists(fpxml))
+                    xmlo.Load(fpxml);
+
+                // http://stackoverflow.com/a/722251
+                foreach (XmlElement el in xmlo.SelectNodes("/configuration/system.data/DbProviderFactories/*[self::add[@invariant='Npgsql'] or self::remove[@invariant='Npgsql']]")) {
+                    el.ParentNode.RemoveChild(el);
+                }
+
+                xmlo.Save(fpxml);
+            }
+        }
     }
 }

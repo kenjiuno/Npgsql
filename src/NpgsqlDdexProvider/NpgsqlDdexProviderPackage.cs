@@ -8,8 +8,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Npgsql.VisualStudio.Provider
-{
+namespace Npgsql.VisualStudio.Provider {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -31,8 +30,7 @@ namespace Npgsql.VisualStudio.Provider
     [ProvideService(typeof(NpgsqlProviderObjectFactory), ServiceName = "PostgreSQL Provider Object Factory")]
     [NpgsqlDataProviderRegistration]
     [Guid(GuidList.guidNpgsqlDdexProviderPkgString)]
-    public sealed class NpgsqlDdexProviderPackage : Package
-    {
+    public sealed class NpgsqlDdexProviderPackage : Package {
         /// <summary>
         /// Default constructor of the package.
         /// Inside this method you can place any initialization code that does not require 
@@ -40,8 +38,7 @@ namespace Npgsql.VisualStudio.Provider
         /// not sited yet inside Visual Studio environment. The place to do all the other 
         /// initialization is the Initialize method.
         /// </summary>
-        public NpgsqlDdexProviderPackage()
-        {
+        public NpgsqlDdexProviderPackage() {
 
         }
 
@@ -55,27 +52,36 @@ namespace Npgsql.VisualStudio.Provider
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override void Initialize()
-        {
+        protected override void Initialize() {
             ((IServiceContainer)this).AddService(typeof(NpgsqlProviderObjectFactory), new NpgsqlProviderObjectFactory(), true);
             base.Initialize();
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs)
-            {
+            if (null != mcs) {
                 // Create the command for the menu item.
-                CommandID menuCommandID = new CommandID(GuidList.guidNpgsqlDdexProviderCmdSet, (int)PkgCmdIDList.cmdidMyCommand);
-                MenuCommand menuItem = new MenuCommand(MenuItemSetupNpgsqlDdexProvider, menuCommandID);
-                mcs.AddCommand(menuItem);
+                {
+                    CommandID menuCommandID = new CommandID(GuidList.guidNpgsqlDdexProviderCmdSetToolsMenu, (int)PkgCmdIDList.cmdidSetupNpgsql);
+                    MenuCommand menuItem = new MenuCommand(MenuItemSetupNpgsqlDdexProvider, menuCommandID);
+                    mcs.AddCommand(menuItem);
+                }
+                {
+                    CommandID menuCommandID = new CommandID(GuidList.guidNpgsqlDdexProviderCmdSetToolsMenu, (int)PkgCmdIDList.cmdidUninstNpgsql);
+                    MenuCommand menuItem = new MenuCommand(MenuItemUninstNpgsqlDdexProvider, menuCommandID);
+                    mcs.AddCommand(menuItem);
+                }
+                {
+                    CommandID menuCommandID = new CommandID(GuidList.guidNpgsqlDdexProviderCmdSetProjMenu, (int)PkgCmdIDList.cmdidCheckNpgsql);
+                    MenuCommand menuItem = new MenuCommand(MenuItemCheckNpgsqlDdexProvider, menuCommandID);
+                    mcs.AddCommand(menuItem);
+                }
             }
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
         }
 
-        System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs e)
-        {
+        System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs e) {
             var npgsqlAssembly = typeof(NpgsqlConnection).Assembly;
             if (e.Name.Equals(npgsqlAssembly.FullName)) // explicit version specified
                 return npgsqlAssembly;
@@ -90,8 +96,8 @@ namespace Npgsql.VisualStudio.Provider
 
         System.Reflection.Assembly entityFramework5NpgsqlAssembly = System.Reflection.Assembly.LoadFrom(
             System.IO.Path.Combine(
-                typeof(NpgsqlDdexProviderPackage).Assembly.Location, 
-                "..", 
+                typeof(NpgsqlDdexProviderPackage).Assembly.Location,
+                "..",
                 "EntityFramework5.Npgsql.dll"
                 )
             );
@@ -101,20 +107,64 @@ namespace Npgsql.VisualStudio.Provider
         /// See the Initialize method to see how the menu item is associated to this function using
         /// the OleMenuCommandService service and the MenuCommand class.
         /// </summary>
-        private void MenuItemSetupNpgsqlDdexProvider(object sender, EventArgs e)
-        {
+        private void MenuItemCheckNpgsqlDdexProvider(object sender, EventArgs e) {
             using (CheckNpgsqlForm form = new CheckNpgsqlForm()) {
                 form.sp = this;
                 form.ShowDialog();
             }
         }
 
+        private void MenuItemSetupNpgsqlDdexProvider(object sender, EventArgs e) {
+            if (!CheckNpgsqlStatus.NeedInst) {
+                UIUt.Alert(this, "The host config file has been already modified. \n"
+                    + "\n"
+                    , "NpgsqlDdexProvider");
+
+                return;
+            }
+            if (UIUt.Confirm(this, "Could we modify the host config file in order to activate Npgsql ADO.NET Data Provider? \n"
+                + "\n"
+                + CheckNpgsqlStatus.Ut.HostConfig + "\n"
+                + "\n"
+                + "The assembly version: \n"
+                + "\n"
+                + typeof(Npgsql.NpgsqlFactory).Assembly.FullName
+                , "NpgsqlDdexProvider")) {
+                CheckNpgsqlStatus.DoInst();
+
+                UIUt.Alert(this, "Modification successful. \n"
+                    + "\n"
+                    + "Please restart this VisualStudio."
+                    , "NpgsqlDdexProvider");
+            }
+        }
+
+        private void MenuItemUninstNpgsqlDdexProvider(object sender, EventArgs e) {
+            if (!CheckNpgsqlStatus.NeedUninst) {
+                UIUt.Alert(this, "Npgsql ADO.NET Data Provider is not installed in your host config file. \n"
+                    + "\n"
+                    + CheckNpgsqlStatus.Ut.HostConfig + "\n"
+                    , "NpgsqlDdexProvider");
+
+                return;
+            }
+            if (UIUt.Confirm(this, "Could we modify the host config file in order to uninstall Npgsql ADO.NET Data Provider? \n"
+                + "\n"
+                + CheckNpgsqlStatus.Ut.HostConfig + "\n"
+                , "NpgsqlDdexProvider")) {
+                CheckNpgsqlStatus.DoUninst();
+
+                UIUt.Alert(this, "Uninstall successful. \n"
+                    + "\n"
+                    + "Please restart this VisualStudio."
+                    , "NpgsqlDdexProvider");
+            }
+        }
+
         #endregion
 
-        class UIUt
-        {
-            internal static void Alert(IServiceProvider host, String text, String title)
-            {
+        class UIUt {
+            internal static void Alert(IServiceProvider host, String text, String title) {
                 // Show a Message Box to prove we were here
                 IVsUIShell uiShell = (IVsUIShell)host.GetService(typeof(SVsUIShell));
                 Guid clsid = Guid.Empty;
@@ -134,8 +184,7 @@ namespace Npgsql.VisualStudio.Provider
                            out result));
             }
 
-            internal static bool Confirm(IServiceProvider host, String text, String title)
-            {
+            internal static bool Confirm(IServiceProvider host, String text, String title) {
                 // Show a Message Box to prove we were here
                 IVsUIShell uiShell = (IVsUIShell)host.GetService(typeof(SVsUIShell));
                 Guid clsid = Guid.Empty;
