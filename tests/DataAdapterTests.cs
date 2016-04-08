@@ -491,6 +491,7 @@ namespace NpgsqlTests
             ExecuteNonQuery("DROP TABLE IF EXISTS data CASCADE");
             ExecuteNonQuery("CREATE TABLE data (" +
                             "field_pk SERIAL PRIMARY KEY," +
+                            "field_date DATE," +
                             "field_serial SERIAL," +
                             "field_int2 SMALLINT," +
                             "field_int4 INTEGER," +
